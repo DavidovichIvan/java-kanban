@@ -1,15 +1,16 @@
 import java.util.Map;
-public class Task {
 
-    public String taskName;
+public class Task {
+    private static int idCounter = 0;
+    private String taskName;
     private String taskDescription;
-    public int taskId;
-    public boolean isEpic;
-    int taskStatus;
-    Map<Integer, String> taskStatusList = Map.ofEntries(
-            Map.entry(1, "NEW"),
-            Map.entry(2, "IN_PROGRESS"),
-            Map.entry(3, "DONE"));
+    private int taskId;
+    private boolean isEpic;
+    private int taskStatus;
+    private Map<Integer, String> taskStatusList = Map.ofEntries(
+            Map.entry(1, "НОВАЯ"),
+            Map.entry(2, "ВЫПОЛНЯЕТСЯ"),
+            Map.entry(3, "ЗАВЕРШЕНА"));
 
     public Task() {
 
@@ -17,7 +18,8 @@ public class Task {
         this.taskDescription = "Описание задачи отсутствует";
         this.isEpic = false;
         taskStatus = 1;
-        taskId = DataManager.getId();
+        taskId = idCounter;
+        idCounter++;
     }
 
     public Task(String taskName, String taskDescription, boolean isEpic, Integer taskStatus) {
@@ -26,7 +28,39 @@ public class Task {
         this.taskDescription = taskDescription;
         this.isEpic = isEpic;
         this.taskStatus = taskStatus;
-        taskId = DataManager.getId();
+        taskId = idCounter;
+        idCounter++;
+    }
+
+    /**
+     * getters/setters
+     */
+    public String getTaskName() {
+        return taskName;
+    }
+
+    public int getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(int taskId) {
+        this.taskId = taskId;
+    }
+
+    public boolean isEpic() {
+        return isEpic;
+    }
+
+    public void setEpic(boolean epic) {
+        isEpic = epic;
+    }
+
+    public int getTaskStatus() {
+        return taskStatus;
+    }
+
+    public void setTaskStatus(int taskStatus) {
+        this.taskStatus = taskStatus;
     }
 
     @Override
@@ -43,5 +77,4 @@ public class Task {
                         + ". Статус задачи: " + taskStatusList.get(taskStatus)
                         + ". Вид задачи: " + subTask;
     }
-
 }

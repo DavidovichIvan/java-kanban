@@ -1,10 +1,10 @@
 //Класс сделал в качестве эксперимента, для void методов, чтобы они возвращали ошибку в случае неудачи.
 
 public class Errors {
-    public static String noError = "Операция выполнена успешно.";
-    public static String error65 = "Ошибка. Задачи (подзадачи) с таким ID нет в списке существующих задач.";
+    public static String operationSuccessful = "Операция выполнена успешно.";
+    public static String nonExistingTaskId = "Ошибка. Задачи (подзадачи) с таким ID нет в списке существующих задач.";
 
-    public static String error77 = "Ошибка. Задачи (подзадачи) с таким именем нет в списке существующих задач.";
-    public static String error88 = "Ошибка. У выбранной задачи отсутствует подзадача с таким именем.";
+    public static String nonExistingTaskName = "Ошибка. Задачи (подзадачи) с таким именем нет в списке существующих задач.";
+    public static String noSubtaskFound = "Ошибка. Отсутствует задача (подзадача) с заданными параметрами.";
 
 }

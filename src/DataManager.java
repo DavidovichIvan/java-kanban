@@ -9,42 +9,39 @@
 //При этом реализована возможность создания объектов класса Эпик, а также
 //получения списка соответствующих объектов как для эпик задач так и для не эпик.
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Random;
+import java.util.*;
 
 public class DataManager {
-    static ArrayList<Integer> existingIdList = new ArrayList<>();
-    static HashMap<Integer, Task> allTasksList = new HashMap<>();
-    public static ArrayList<SubTask> allSubTasksList = new ArrayList<>();
+    private static final int NEW = 1;
+    private static final int IN_PROGRESS = 2;
+    private static final int DONE = 3;
+    private ArrayList<Integer> existingIdList = new ArrayList<>();
+    private HashMap<Integer, Task> allTasksList = new HashMap<>();
+    private ArrayList<SubTask> allSubTasksList = new ArrayList<>();
 
     /**
-     * Method for creating unique ID for a new task
+     * getters/setters
      */
-    public static Integer getId() {
+    public ArrayList<Integer> getExistingIdList() { return existingIdList; }
+    public HashMap<Integer, Task> getAllTasksList() {
+        return allTasksList;
+    }
 
-        Random random = new Random();
-        //рандом установлен в диапазоне до 3 для удобства тестирования
-        int id = random.nextInt(3);
-
-        while (existingIdList.contains(id)) {
-            id++;
-        }
-        existingIdList.add(id);
-        return id;
+    public ArrayList<SubTask> getAllSubTasksList() {
+        return allSubTasksList;
     }
 
     /**
      * Method for creation a task with pre-defined parameters
      */
-    public static Task createTask(String taskName,
-                                  String taskDescription,
-                                  boolean isEpic,
-                                  Integer taskStatus) {
+    public Task createTask(String taskName,
+                           String taskDescription,
+                           boolean isEpic,
+                           Integer taskStatus) {
 
         Task task = new Task(taskName, taskDescription, isEpic, taskStatus);
-        allTasksList.put(task.taskId, task);
+        allTasksList.put(task.getTaskId(), task);
+        existingIdList.add(task.getTaskId());
 
         return task;
     }
@@ -52,18 +49,18 @@ public class DataManager {
     /**
      * Method for an empty task creation
      */
-    public static Task createEmptyTask() {
+    public Task createEmptyTask() {
 
         Task task = new Task();
-        allTasksList.put(task.taskId, task);
-
+        allTasksList.put(task.getTaskId(), task);
+        existingIdList.add(task.getTaskId());
         return task;
     }
 
     /**
      * Method for getting task by its Id
      */
-    public static Task getTaskById(Integer id) {
+    public Task getTaskById(Integer id) {
         if (!allTasksList.containsKey(id)) {
             return null;
         } else {
@@ -75,10 +72,10 @@ public class DataManager {
     /**
      * Method for getting task by its taskName
      */
-    public static Task getTaskByName(String taskName) {
+    public Task getTaskByName(String taskName) {
 
         for (Task task : allTasksList.values()) {
-            if (task.taskName.equalsIgnoreCase(taskName)) {
+            if (task.getTaskName().equalsIgnoreCase(taskName)) {
                 return task;
             }
         }
@@ -88,19 +85,21 @@ public class DataManager {
     /**
      * Method for updating existing task by its Id
      */
-    public static String updateTaskById(Task task) {
-        if (!allTasksList.containsKey(task.taskId)) {
-            return Errors.error65;
-        } else
-            allTasksList.put(task.taskId, task);
-        updateTaskStatus(task.taskId);
-        return Errors.noError;
+    public String updateTaskById(Task task, int taskId) {
+        if (!allTasksList.containsKey(taskId)) {
+            return Errors.nonExistingTaskId;
+        } else {
+            task.setTaskId(taskId);
+            allTasksList.put(taskId, task);
+            updateTaskStatus(task.getTaskId());
+            return Errors.operationSuccessful;
+        }
     }
 
     /**
      * Method for removing all tasks
      */
-    public static void removeAllTasks() {
+    public void removeAllTasks() {
         allTasksList.clear();
         existingIdList.clear();
         allSubTasksList.clear();
@@ -109,22 +108,22 @@ public class DataManager {
     /**
      * Method for removing task (and its subtasks) by task Id
      */
-    public static String removeTaskById(Integer id) {
+    public String removeTaskById(Integer id) {
         if (!allTasksList.containsKey(id)) {
-            return Errors.error65;
+            return Errors.nonExistingTaskId;
         }
         allTasksList.remove(id);
         existingIdList.remove(existingIdList.indexOf(id));
         deleteAllSubtasksByTaskId(id);
 
-        return Errors.noError;
+        return Errors.operationSuccessful;
 
     }
 
     /**
      * Method for a subtask creation
      */
-    public static SubTask createSubTask(int mainTaskId, String subTaskName, Integer subTaskStatus) {
+    public SubTask createSubTask(int mainTaskId, String subTaskName, Integer subTaskStatus) {
         if (!existingIdList.contains(mainTaskId)) {
             return null;
         } else {
@@ -132,7 +131,7 @@ public class DataManager {
 
             allSubTasksList.add(subTask);
             updateTaskStatus(mainTaskId);
-            allTasksList.get(mainTaskId).isEpic = true;
+            allTasksList.get(mainTaskId).setEpic(true);
             return subTask;
         }
     }
@@ -140,12 +139,11 @@ public class DataManager {
     /**
      * Method for getting subtask Id by its name
      */
-    public static Integer getSubTaskIdByName(String subTaskName) {
-        int index = 0;
-        for (SubTask subTask : DataManager.allSubTasksList) {
-            if (subTask.subTaskName.equalsIgnoreCase(subTaskName)) {
-                return index;
-            } else index++;
+    public Integer getSubTaskIdByName(String subTaskName) {
+        for (SubTask subTask : allSubTasksList) {
+            if (subTask.getSubTaskName().equalsIgnoreCase(subTaskName)) {
+                return subTask.getSubTaskId();
+            }
         }
         return null;
     }
@@ -153,21 +151,36 @@ public class DataManager {
     /**
      * Method for getting subTask name by its Id
      */
-    public static String getSubTaskNameById(Integer id) {
+    public String getSubTaskNameById(Integer id) {
+        for (SubTask subTask : allSubTasksList) {
+            if (subTask.getSubTaskId() == id) {
+                return subTask.getSubTaskName();
+            }
+        }
+        return Errors.nonExistingTaskId;
+    }
 
-        if (id >= 0 && id < allSubTasksList.size()) {
-            return allSubTasksList.get(id).subTaskName;
-        } else return Errors.error65;
+    /**
+     * Method for getting subtasks by its task id
+     */
+    public SubTask getSubTaskById(Integer id) {
+
+        for (SubTask subTask : allSubTasksList) {
+            if (subTask.getSubTaskId() == id) {
+                return subTask;
+            }
+        }
+        return null;
     }
 
     /**
      * Method for getting all subtasks list for a certain task (by task id)
      */
-    public static ArrayList<SubTask> getSubTasksListByTaskId(Integer id) {
+    public ArrayList<SubTask> getSubTasksListByTaskId(Integer id) {
         ArrayList<SubTask> subTasksListByTaskId = new ArrayList<>();
 
         for (SubTask subTask : allSubTasksList) {
-            if (subTask.mainTaskId == id) {
+            if (subTask.getMainTaskId() == id) {
                 subTasksListByTaskId.add(subTask);
             }
         }
@@ -177,117 +190,96 @@ public class DataManager {
     /**
      * Method for deleting all existing subtasks
      */
-    public static void deleteAllSubtasks() {
+    public void deleteAllSubtasks() {
         allSubTasksList.clear();
 
         for (Task task : allTasksList.values()) {
-            task.isEpic = false;
+            task.setEpic(false);
         }
     }
 
     /**
      * Method for deleting all subtasks for a certain task by the task id
      */
-    public static void deleteAllSubtasksByTaskId(Integer id) {
+    public void deleteAllSubtasksByTaskId(Integer id) {
         Iterator<SubTask> ite = allSubTasksList.iterator();
 
         while (ite.hasNext()) {
             SubTask subTask = ite.next();
-            if (subTask.mainTaskId == id)
+            if (subTask.getMainTaskId() == id) {
                 ite.remove();
+            }
         }
-        allTasksList.get(id).isEpic = false;
+        allTasksList.get(id).setEpic(false);
     }
 
     /**
      * Method for deleting one certain subtask by its id
      */
-    public static String deleteSubtaskByItsId(int id) {
-
-        if (id >= 0 && id < allSubTasksList.size()) {
-
-            int mainId = allSubTasksList.get(id).mainTaskId;
-            allSubTasksList.remove(id);
-            updateTaskStatus(mainId);
-
-            allTasksList.get(mainId).isEpic = false;
-            for (SubTask subTask : allSubTasksList) {
-                if (subTask.mainTaskId == mainId) {
-                    allTasksList.get(mainId).isEpic = true;
-                }
-            }
-            return Errors.noError;
-        } else return Errors.error65;
-    }
-
-    /**
-     * Method for deleting one certain subtask by its name
-     */
-    public static String deleteSubtaskByItsName(String subTaskName) {
+    public String deleteSubtaskByItsId(Integer id) {
         int index = 0;
-
-        for (SubTask subTask : allSubTasksList) {
-            if (subTask.subTaskName.equalsIgnoreCase(subTaskName)) {
-                int mainId = subTask.mainTaskId;
+        for (SubTask sub : allSubTasksList) {
+            if (sub.getSubTaskId() == id) {
+                int mainId = sub.getMainTaskId();
                 allSubTasksList.remove(index);
-                allTasksList.get(mainId).isEpic = false;
+                updateTaskStatus(mainId);
 
-                for (SubTask subTask1 : allSubTasksList) {
-                    if (subTask1.mainTaskId == mainId) {
-                        allTasksList.get(mainId).isEpic = true;
+                allTasksList.get(mainId).setEpic(false);
+                for (SubTask subTask : allSubTasksList) {
+                    if (subTask.getMainTaskId() == mainId) {
+                        allTasksList.get(mainId).setEpic(true);
                     }
                 }
-                updateTaskStatus(mainId);
-                return Errors.noError;
+                return Errors.operationSuccessful;
             }
             index++;
         }
-        return Errors.error77;
+        return Errors.noSubtaskFound;
     }
 
     /**
-     * Method for updating existing subtask
+     * Method for updating existing subtask by subTaskId
      */
-    public static String updateSubTask(SubTask subTask) {
+    public String updateSubTask(SubTask subTask, int subTaskId) {
         int index = 0;
 
         for (SubTask sub : allSubTasksList) {
-            if (sub.mainTaskId == subTask.mainTaskId &&
-                    sub.subTaskName.equalsIgnoreCase(subTask.subTaskName)) {
+            if (sub.getSubTaskId() == subTaskId && sub.getMainTaskId() == subTask.getMainTaskId()) {
+                subTask.setSubTaskId(subTaskId);
                 allSubTasksList.set(index, subTask);
+                allTasksList.get(subTask.getMainTaskId()).setEpic(true);
+                updateTaskStatus(sub.getMainTaskId());
 
-                allTasksList.get(subTask.mainTaskId).isEpic = true;
-
-                updateTaskStatus(sub.mainTaskId);
-                return Errors.noError;
+                return Errors.operationSuccessful;
             }
             index++;
         }
-        return Errors.error88;
+        return Errors.noSubtaskFound;
     }
 
     /**
      * Method for getting an Epic object (task+related subtasks) by task id
      */
-    public static Epic getEpicTaskById(Integer id) {
+    public Epic getEpicTaskById(Integer id) {
+        if (!getTaskById(id).isEpic()) {
+            return null;
+        }
         Epic epic = new Epic();
-
-        epic.epicTask = getTaskById(id);
-        epic.epicSubTasks = getSubTasksListByTaskId(id);
+        epic.setEpicTask(getTaskById(id));
+        epic.setEpicSubTasks(getSubTasksListByTaskId(id));
 
         return epic;
-
     }
 
     /**
      * Method for getting list of Epic objects (without subtasks)
      */
-    public static HashMap<Integer, Task> getAllEpicTasks() {
+    public HashMap<Integer, Task> getAllEpicTasks() {
         HashMap<Integer, Task> allEpicTasksList = new HashMap<>();
 
         for (Task task : allTasksList.values()) {
-            if (task.isEpic == true) {
-                allEpicTasksList.put(task.taskId, task);
+            if (task.isEpic() == true) {
+                allEpicTasksList.put(task.getTaskId(), task);
             }
         }
         return allEpicTasksList;
@@ -296,12 +288,12 @@ public class DataManager {
     /**
      * Method for getting list of non-Epic objects
      */
-    public static HashMap<Integer, Task> getAllNonEpicTasks() {
+    public HashMap<Integer, Task> getAllNonEpicTasks() {
         HashMap<Integer, Task> allNonEpicTasksList = new HashMap<>();
 
         for (Task task : allTasksList.values()) {
-            if (task.isEpic == false) {
-                allNonEpicTasksList.put(task.taskId, task);
+            if (task.isEpic() == false) {
+                allNonEpicTasksList.put(task.getTaskId(), task);
             }
         }
         return allNonEpicTasksList;
@@ -310,18 +302,18 @@ public class DataManager {
     /**
      * Method for getting list of all Epic objects (tasks+subtasks)
      */
-    public static ArrayList<Epic> getAllEpicTasksAndSubtasks() {
+    public ArrayList<Epic> getAllEpicTasksAndSubtasks() {
         ArrayList<Epic> allEpicsAndSubtasks = new ArrayList<>();
 
         for (Task task : allTasksList.values()) {
             Epic epic = new Epic();
-            if (task.isEpic == true) {
-                epic.epicTask = task;
-                epic.epicSubTasks = getSubTasksListByTaskId(task.taskId);
+            if (task.isEpic() == true) {
+
+                epic.setEpicTask(task);
+                epic.setEpicSubTasks(getSubTasksListByTaskId(task.getTaskId()));
 
                 allEpicsAndSubtasks.add(epic);
             }
-
         }
         return allEpicsAndSubtasks;
     }
@@ -329,45 +321,44 @@ public class DataManager {
     /**
      * Method for updating task status (new/in progress/done) for a certain task
      */
-    public static String updateTaskStatus(int id) {
+    public String updateTaskStatus(int id) {
         if (!existingIdList.contains(id)) {
-            return Errors.error65;
+            return Errors.nonExistingTaskId;
         }
-
         ArrayList<SubTask> subTasksListByTaskId = getSubTasksListByTaskId(id);
-
         if (subTasksListByTaskId.isEmpty()) {
-            return Errors.noError;
-        } else
-            allTasksList.get(id).taskStatus = 2;
+            allTasksList.get(id).setTaskStatus(NEW);
+            return Errors.operationSuccessful;
+        } else {
+            allTasksList.get(id).setTaskStatus(IN_PROGRESS);
 
-        for (SubTask sub : subTasksListByTaskId) {
-            if (sub.subTaskStatus == 2) {
-                return Errors.noError;
+            for (SubTask sub : subTasksListByTaskId) {
+                if (sub.getSubTaskStatus() == IN_PROGRESS) {
+                    return Errors.operationSuccessful;
+                }
             }
         }
-
         boolean isDone = true;
         for (SubTask sub : subTasksListByTaskId) {
-            if (sub.subTaskStatus != 3) {
+            if (sub.getSubTaskStatus() != DONE) {
                 isDone = false;
             }
         }
         if (isDone == true) {
-            allTasksList.get(id).taskStatus = 3;
-            return Errors.noError;
+            allTasksList.get(id).setTaskStatus(DONE);
+            return Errors.operationSuccessful;
         } else if (isDone == false) {
             boolean isNew = true;
             for (SubTask sub : subTasksListByTaskId) {
-                if (sub.subTaskStatus != 1) {
+                if (sub.getSubTaskStatus() != NEW) {
                     isNew = false;
                 }
             }
             if (isNew == true) {
-                allTasksList.get(id).taskStatus = 1;
-                return Errors.noError;
+                allTasksList.get(id).setTaskStatus(NEW);
+                return Errors.operationSuccessful;
             }
         }
-        return Errors.noError;
+        return Errors.operationSuccessful;
     }
 }
