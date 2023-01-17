@@ -1,6 +1,8 @@
+package Model;
+
 import java.util.Map;
 
-public class Task {
+public class Task extends TemplateTask {
     private static int idCounter = 0;
     private String taskName;
     private String taskDescription;

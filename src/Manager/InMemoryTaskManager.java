@@ -1,39 +1,47 @@
-//Небольшой комментарий: я рассматривал разные варианты структуры организации и хранения данных.
-//Основное из чего я в итоге исходил, что задача должна иметь возможность изменять статуc (эпик/не эпик),
-//поэтому я добавил задачам признак isEpic, а их хранение осуществляется в единой для всех задач хэш-таблице с уникальным
-//ключом-идентификатором, через который осуществляется основное взаимодействие с подзадачами.
 
-//При таком подходе, нет необходимости иметь два хранилища данных для эпик и не эпик задач, а в случае изменения
-//статуса задачи нет необходимости переписывать ее из одного хранилища в другое.
+package Manager;
 
-//При этом реализована возможность создания объектов класса Эпик, а также
-//получения списка соответствующих объектов как для эпик задач так и для не эпик.
+import Interfaces.TaskManager;
+import Model.Epic;
+import Model.SubTask;
+import Model.Task;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 
-public class DataManager {
+public class InMemoryTaskManager implements TaskManager {
     private static final int NEW = 1;
     private static final int IN_PROGRESS = 2;
     private static final int DONE = 3;
+
     private ArrayList<Integer> existingIdList = new ArrayList<>();
     private HashMap<Integer, Task> allTasksList = new HashMap<>();
     private ArrayList<SubTask> allSubTasksList = new ArrayList<>();
 
+    private InMemoryHistoryManager history = Managers.getDefaultHistory();
+
     /**
      * getters/setters
      */
-    public ArrayList<Integer> getExistingIdList() { return existingIdList; }
+    public ArrayList<Integer> getExistingIdList() {
+        return existingIdList;
+    }
+
     public HashMap<Integer, Task> getAllTasksList() {
         return allTasksList;
     }
 
+    public InMemoryHistoryManager getHistory() {
+        return history;
+    }
+
+    @Override
     public ArrayList<SubTask> getAllSubTasksList() {
         return allSubTasksList;
     }
 
-    /**
-     * Method for creation a task with pre-defined parameters
-     */
+    @Override
     public Task createTask(String taskName,
                            String taskDescription,
                            boolean isEpic,
@@ -46,9 +54,7 @@ public class DataManager {
         return task;
     }
 
-    /**
-     * Method for an empty task creation
-     */
+    @Override
     public Task createEmptyTask() {
 
         Task task = new Task();
@@ -57,34 +63,24 @@ public class DataManager {
         return task;
     }
 
-    /**
-     * Method for getting task by its Id
-     */
+    @Override
     public Task getTaskById(Integer id) {
         if (!allTasksList.containsKey(id)) {
             return null;
         } else {
             Task task = allTasksList.get(id);
+
+            if (task.isEpic()) {
+                Epic epic = new Epic();
+                epic.setEpicTask(getAllTasksList().get(id));
+                epic.setEpicSubTasks(getSubTasksListByTaskId(id));
+                history.updateHistoryList(epic);
+            } else history.updateHistoryList(task);
             return task;
         }
     }
 
-    /**
-     * Method for getting task by its taskName
-     */
-    public Task getTaskByName(String taskName) {
-
-        for (Task task : allTasksList.values()) {
-            if (task.getTaskName().equalsIgnoreCase(taskName)) {
-                return task;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Method for updating existing task by its Id
-     */
+    @Override
     public String updateTaskById(Task task, int taskId) {
         if (!allTasksList.containsKey(taskId)) {
             return Errors.nonExistingTaskId;
@@ -96,18 +92,14 @@ public class DataManager {
         }
     }
 
-    /**
-     * Method for removing all tasks
-     */
+    @Override
     public void removeAllTasks() {
         allTasksList.clear();
         existingIdList.clear();
         allSubTasksList.clear();
     }
 
-    /**
-     * Method for removing task (and its subtasks) by task Id
-     */
+    @Override
     public String removeTaskById(Integer id) {
         if (!allTasksList.containsKey(id)) {
             return Errors.nonExistingTaskId;
@@ -120,11 +112,9 @@ public class DataManager {
 
     }
 
-    /**
-     * Method for a subtask creation
-     */
+    @Override
     public SubTask createSubTask(int mainTaskId, String subTaskName, Integer subTaskStatus) {
-        if (!existingIdList.contains(mainTaskId)) {
+        if (!allTasksList.containsKey(mainTaskId)) {
             return null;
         } else {
             SubTask subTask = new SubTask(mainTaskId, subTaskName, subTaskStatus);
@@ -136,9 +126,7 @@ public class DataManager {
         }
     }
 
-    /**
-     * Method for getting subtask Id by its name
-     */
+    @Override
     public Integer getSubTaskIdByName(String subTaskName) {
         for (SubTask subTask : allSubTasksList) {
             if (subTask.getSubTaskName().equalsIgnoreCase(subTaskName)) {
@@ -148,9 +136,7 @@ public class DataManager {
         return null;
     }
 
-    /**
-     * Method for getting subTask name by its Id
-     */
+    @Override
     public String getSubTaskNameById(Integer id) {
         for (SubTask subTask : allSubTasksList) {
             if (subTask.getSubTaskId() == id) {
@@ -160,22 +146,20 @@ public class DataManager {
         return Errors.nonExistingTaskId;
     }
 
-    /**
-     * Method for getting subtasks by its task id
-     */
+    @Override
     public SubTask getSubTaskById(Integer id) {
 
         for (SubTask subTask : allSubTasksList) {
             if (subTask.getSubTaskId() == id) {
+                history.updateHistoryList(subTask);
+
                 return subTask;
             }
         }
         return null;
     }
 
-    /**
-     * Method for getting all subtasks list for a certain task (by task id)
-     */
+    @Override
     public ArrayList<SubTask> getSubTasksListByTaskId(Integer id) {
         ArrayList<SubTask> subTasksListByTaskId = new ArrayList<>();
 
@@ -187,9 +171,7 @@ public class DataManager {
         return subTasksListByTaskId;
     }
 
-    /**
-     * Method for deleting all existing subtasks
-     */
+    @Override
     public void deleteAllSubtasks() {
         allSubTasksList.clear();
 
@@ -198,9 +180,7 @@ public class DataManager {
         }
     }
 
-    /**
-     * Method for deleting all subtasks for a certain task by the task id
-     */
+    @Override
     public void deleteAllSubtasksByTaskId(Integer id) {
         Iterator<SubTask> ite = allSubTasksList.iterator();
 
@@ -213,9 +193,7 @@ public class DataManager {
         allTasksList.get(id).setEpic(false);
     }
 
-    /**
-     * Method for deleting one certain subtask by its id
-     */
+    @Override
     public String deleteSubtaskByItsId(Integer id) {
         int index = 0;
         for (SubTask sub : allSubTasksList) {
@@ -237,9 +215,7 @@ public class DataManager {
         return Errors.noSubtaskFound;
     }
 
-    /**
-     * Method for updating existing subtask by subTaskId
-     */
+    @Override
     public String updateSubTask(SubTask subTask, int subTaskId) {
         int index = 0;
 
@@ -257,23 +233,24 @@ public class DataManager {
         return Errors.noSubtaskFound;
     }
 
-    /**
-     * Method for getting an Epic object (task+related subtasks) by task id
-     */
+    @Override
     public Epic getEpicTaskById(Integer id) {
+
         if (!getTaskById(id).isEpic()) {
             return null;
         }
+        history.getHistoryList().remove(0);
         Epic epic = new Epic();
         epic.setEpicTask(getTaskById(id));
         epic.setEpicSubTasks(getSubTasksListByTaskId(id));
+        history.getHistoryList().remove(0);
+
+        history.updateHistoryList(epic);
 
         return epic;
     }
 
-    /**
-     * Method for getting list of Epic objects (without subtasks)
-     */
+    @Override
     public HashMap<Integer, Task> getAllEpicTasks() {
         HashMap<Integer, Task> allEpicTasksList = new HashMap<>();
 
@@ -285,9 +262,7 @@ public class DataManager {
         return allEpicTasksList;
     }
 
-    /**
-     * Method for getting list of non-Epic objects
-     */
+    @Override
     public HashMap<Integer, Task> getAllNonEpicTasks() {
         HashMap<Integer, Task> allNonEpicTasksList = new HashMap<>();
 
@@ -299,9 +274,7 @@ public class DataManager {
         return allNonEpicTasksList;
     }
 
-    /**
-     * Method for getting list of all Epic objects (tasks+subtasks)
-     */
+    @Override
     public ArrayList<Epic> getAllEpicTasksAndSubtasks() {
         ArrayList<Epic> allEpicsAndSubtasks = new ArrayList<>();
 
@@ -318,11 +291,9 @@ public class DataManager {
         return allEpicsAndSubtasks;
     }
 
-    /**
-     * Method for updating task status (new/in progress/done) for a certain task
-     */
+    @Override
     public String updateTaskStatus(int id) {
-        if (!existingIdList.contains(id)) {
+        if (!allTasksList.containsKey(id)) {
             return Errors.nonExistingTaskId;
         }
         ArrayList<SubTask> subTasksListByTaskId = getSubTasksListByTaskId(id);
@@ -360,5 +331,14 @@ public class DataManager {
             }
         }
         return Errors.operationSuccessful;
+    }
+
+    @Override
+    public String toString() {
+        return "InMemoryTaskManager{" +
+                "existingIdList=" + existingIdList +
+                ", allTasksList=" + allTasksList +
+                ", allSubTasksList=" + allSubTasksList +
+                '}';
     }
 }

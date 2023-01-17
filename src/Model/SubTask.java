@@ -1,4 +1,6 @@
-public class SubTask {
+package Model;
+
+public class SubTask extends TemplateTask {
 
     private static int subTaskIdCounter = 0;
     private Integer mainTaskId;
@@ -51,11 +53,11 @@ public class SubTask {
 
     @Override
     public String toString() {
-        return "SubTask{" +
-                "subTaskName='" + subTaskName + '\'' +
-                ", subTaskStatus=" + subTaskStatus +
-                ", mainTaskId=" + mainTaskId +
-                ", subTaskId=" + subTaskId +
+        return "Подзадача{" +
+                "имя подзадачи='" + subTaskName + '\'' +
+                ", статус подзадачи=" + subTaskStatus +
+                ", ID основной задачи=" + mainTaskId +
+                ", ID подзадачи=" + subTaskId +
                 '}';
     }
 

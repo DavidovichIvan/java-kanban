@@ -1,4 +1,4 @@
-//Класс сделал в качестве эксперимента, для void методов, чтобы они возвращали ошибку в случае неудачи.
+package Manager;
 
 public class Errors {
     public static String operationSuccessful = "Операция выполнена успешно.";

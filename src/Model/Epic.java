@@ -1,6 +1,8 @@
+package Model;
+
 import java.util.ArrayList;
 
-public class Epic {
+public class Epic extends TemplateTask {
     private Task epicTask;
     private ArrayList<SubTask> epicSubTasks;
 
@@ -19,9 +21,9 @@ public class Epic {
 
     @Override
     public String toString() {
-        return "Epic{" +
-                "EpicTask=" + epicTask +
-                ", epicSubTasks=" + epicSubTasks +
+        return "Эпик {" +
+                "Основная задача эпика=" + epicTask +
+                ", Подзадачи эпика=" + epicSubTasks +
                 '}';
     }
 }
