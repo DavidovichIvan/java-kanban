@@ -2,64 +2,36 @@ package Model;
 
 public class SubTask extends TemplateTask {
 
-    private static int subTaskIdCounter = 0;
-    private Integer mainTaskId;
-    private String subTaskName;
-    private Integer subTaskStatus;
+    public SubTask() {
+        super.taskId = idCounter;
+        idCounter++;
 
-    private int subTaskId;
-
-    public SubTask(Integer mainTaskId, String subTaskName, Integer subTaskStatus) {
-        this.mainTaskId = mainTaskId;
-        this.subTaskName = subTaskName;
-        this.subTaskStatus = subTaskStatus;
-        this.subTaskId = subTaskIdCounter;
-        subTaskIdCounter++;
+        this.name = "Имя подзадачи";
+        this.taskStatus = TaskStatus.NEW;
     }
 
-    /**
-     * getters/setters
-     */
-    public Integer getMainTaskId() {
-        return mainTaskId;
-    }
+    public SubTask(String subTaskName, TaskStatus taskStatus) {
+        super.taskId = idCounter;
+        idCounter++;
 
-    public void setMainTaskId(Integer mainTaskId) {
-        this.mainTaskId = mainTaskId;
-    }
-
-    public String getSubTaskName() {
-        return subTaskName;
-    }
-
-    public void setSubTaskName(String subTaskName) {
-        this.subTaskName = subTaskName;
-    }
-
-    public Integer getSubTaskStatus() {
-        return subTaskStatus;
-    }
-
-    public void setSubTaskStatus(Integer subTaskStatus) {
-        this.subTaskStatus = subTaskStatus;
+        this.name = subTaskName;
+        this.taskStatus = taskStatus;
     }
 
     public int getSubTaskId() {
-        return subTaskId;
+        return taskId;
     }
+
     public void setSubTaskId(int subTaskId) {
-        this.subTaskId = subTaskId;
+        this.taskId = subTaskId;
     }
 
     @Override
     public String toString() {
-        return "Подзадача{" +
-                "имя подзадачи='" + subTaskName + '\'' +
-                ", статус подзадачи=" + subTaskStatus +
-                ", ID основной задачи=" + mainTaskId +
-                ", ID подзадачи=" + subTaskId +
+        return "Подзадача:{" +
+                "ID подзадачи=" + taskId +
+                ", имя подзадачи='" + name + '\'' +
+                ", статус подзадачи=" + taskStatus +
                 '}';
     }
-
 }
-

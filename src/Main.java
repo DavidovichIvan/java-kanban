@@ -1,120 +1,153 @@
-
 import Interfaces.TaskManager;
+import Manager.InMemoryHistoryManager;
 import Manager.InMemoryTaskManager;
 import Manager.Managers;
 import Model.SubTask;
 import Model.Task;
 import Model.TemplateTask;
-import java.util.ArrayList;
-
 
 public class Main {
-
     public static void main(String[] args) {
 
-        InMemoryTaskManager dataManager = new InMemoryTaskManager();
-        //InMemoryTaskManager dataManager = (InMemoryTaskManager)Managers.getDefault();
+        // InMemoryTaskManager taskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
 
-        Task task1 = dataManager.createTask("Ремонт", "Делаем ремонт к праздникам", false, 1);
-        dataManager.createTask("Отдых", "Короткий отдых", false, 1);
-        dataManager.createTask("Игры", "Играем в разные игры", true, 2);
+        // InMemoryTaskManager dataManager = new InMemoryTaskManager(Managers.getDefaultHistory());
 
-    //______________________разбираемся с подзадачами___________________________________________
+        InMemoryTaskManager taskManager = (InMemoryTaskManager) Managers.getDefault();
+
+        // TaskManager taskManager = Managers.getDefault();
+
+        taskManager.createNewTask();
+
+        taskManager.createNewTask(new Task());
+        taskManager.createNewTask(new Task("Новый год", "Купить подарки"));
+        System.out.println(taskManager.getAllTasksList());
+
+        taskManager.deleteTaskById(3);
+        System.out.println(taskManager.getAllTasksList());
+
+        SubTask sub = new SubTask("Ремонт", TemplateTask.TaskStatus.DONE);
+        SubTask sub1 = new SubTask();
+        System.out.println(sub1);
+
+        taskManager.createSubTask(1);
+        // taskManager.createSubTask(1, "Собираем хлам", TemplateClass.TaskStatus.IN_PROGRESS);
+        taskManager.createSubTask(1, new SubTask());
+        System.out.println(taskManager.createSubTask(2, new SubTask("Собираем хлам", TemplateTask.TaskStatus.IN_PROGRESS))); //так норм, сразу передаем новый сабтаск, который тут же создаем и передаем что нужно в конструктор сабтаска
+
+        System.out.println(taskManager.getAllTasksList().get(1));
+        System.out.println(taskManager.getTaskById(2));
+
+        System.out.println(taskManager.getSubTaskById(8));
+
+        System.out.println("Выводим все существующие подзадачи: " + taskManager.getAllExistingSubtasks());
+
+        System.out.println("Выводим подзадачи для задачи по ID: " + taskManager.getSubtasksForCertainTaskByID(2));
+
+        System.out.println("Выводим все эпики: " + taskManager.getAllEpicTasksList());
+        taskManager.createNewTask();
+        System.out.println("Выводим все не эпики: " + taskManager.getAllNonEpicTasksList());
+
+        //замена подзадачи по ее id
+        System.out.println(taskManager.getSubTaskById(8));
+        System.out.println(taskManager.updateSubTask(new SubTask("Подзадача на замену", TemplateTask.TaskStatus.IN_PROGRESS), 8));
+        System.out.println(taskManager.getSubTaskById(8));
+
+        //удаление всех задач
+        // System.out.println(taskManager.getAllTasksList());
+        // taskManager.deleteAllTasks();
+        // System.out.println(taskManager.getAllTasksList());
+
+        //удаление подзадачи по ее ID
+        //System.out.println(taskManager.getTaskById(2));
+        //System.out.println(taskManager.deleteSubTaskByID(8));
+        System.out.println(taskManager.getSubTaskById(8));
+
+        System.out.println(taskManager.getTaskById(2));
+        taskManager.deleteAllSubTasksByTaskId(2);
+        System.out.println(taskManager.getTaskById(2));
+
+        System.out.println(taskManager.getTaskById(1));
+        System.out.println(taskManager.changeTaskNameById(1, "Готовим ужин"));
+        System.out.println(taskManager.changeTaskDescriptionById(1, "Готовим пельмени на ужин"));
+        System.out.println(taskManager.getTaskById(1));
+
+        System.out.println(taskManager.getTaskById(2));
+        System.out.println(taskManager.changeNonEpicTaskStatusById(2, TemplateTask.TaskStatus.DONE));
+        System.out.println(taskManager.getTaskById(2));
+
+
+        taskManager.deleteSubTaskByID(6);
+        taskManager.deleteSubTaskByID(7);
+
+        taskManager.createSubTask(1, new SubTask("Лепим пельмени", TemplateTask.TaskStatus.DONE));
+        taskManager.createSubTask(1, new SubTask("Варим пельмени", TemplateTask.TaskStatus.DONE));
+        taskManager.createSubTask(1, new SubTask("Едим пельмени", TemplateTask.TaskStatus.DONE));
+        System.out.println(taskManager.getTaskById(1));
+
+        System.out.println(taskManager.getTaskById(2));
+        System.out.println(taskManager.getHistory().getHistoryList());
+
+        taskManager.getHistory().getHistoryMap().clear();
+        System.out.println("Очистили историю " + taskManager.getHistory().getHistoryList());
+
+        //проверка что в истории только один раз остается запись при многократном обращении к объекту
+        for (int i = 1; i <= 3; i++) {
+            taskManager.getSubTaskById(11);
+        }
+        System.out.println(taskManager.getHistory().getHistoryList());
+
+        //проверка что добавление идет в конец истории
+        taskManager.getSubTaskById(12);
+        System.out.println(taskManager.getHistory().getHistoryList());
+
+        //проверка что объект, который уже есть в истории, при повторном вызове перезаписывается в конец
+        taskManager.getSubTaskById(11);
+        System.out.println(taskManager.getHistory().getHistoryList());
+
+        //проверка отсутствия повторов и перезаписи в конец при повторном просмотре
+        taskManager.getTaskById(2);
+        taskManager.getTaskById(1);
+        taskManager.getSubTaskById(11);
+        taskManager.getSubTaskById(12);
+        taskManager.getSubTaskById(13);
         System.out.println();
-        SubTask subTask = dataManager.createSubTask(2, "Собрать вещи", 1);
-        // System.out.println(dataManager.createSubTask(1,"Собрать вещи",1));
-        SubTask subTask1 = dataManager.createSubTask(2, "Вызвать работников", 1);
-        // System.out.println(subTask);
-        // System.out.println(subTask1);
 
-        dataManager.createSubTask(1, "Купить еды", 1);
-        dataManager.createSubTask(1, "Танцевать", 1);
-        dataManager.createSubTask(1, "Валять дурака", 1);
-
-        System.out.println(dataManager.getAllSubTasksList());
-        System.out.println("Уникальный номер подзадачи " + dataManager.getSubTaskIdByName("Валять дурака"));
-        System.out.println(dataManager.getSubTaskNameById(1));
-
-        //тестируем получение по ID, задачи, подзадач и всего эпика
-        System.out.println("Выводим задачу по ID " + dataManager.getTaskById(1));
-        System.out.println("Выводим все подзадачи по ID " + dataManager.getSubTasksListByTaskId(1));
-        System.out.println("А это эпик, выводим и задачи и подзадачи по ID: " + dataManager.getEpicTaskById(2));
-
-        //тестируем сохранение и просмотр истории просмотров
+        for (TemplateTask t : taskManager.getHistory().getHistoryList()) {
+            System.out.println(t);
+        }
 /*
-        System.out.println("История просмотров "+dataManager.getHistory().getHistoryList());
-        System.out.println("История просмотров "+dataManager.getHistory().getHistoryList());
-        dataManager.getTaskById(1);
-        System.out.println("История просмотров "+dataManager.getHistory().getHistoryList());
-        dataManager.getSubTaskById(1);
-        System.out.println("История просмотров "+dataManager.getHistory().getHistoryList());
-        dataManager.getEpicTaskById(1);
-        System.out.println("История просмотров "+dataManager.getHistory().getHistoryList());
-        System.out.println("История просмотров "+dataManager.getHistory().getHistoryList());
-        dataManager.getTaskById(0);
-        System.out.println("История просмотров "+dataManager.getHistory().getHistoryList());
-        dataManager.getTaskById(1);
-        System.out.println("История просмотров "+dataManager.getHistory().getHistoryList());
-        System.out.println("Элемент из списка истории: "+dataManager.getHistory().getHistoryList());
-
-        for (int i=1; i<=10;i++) {
-            dataManager.getTaskById(0);
-            System.out.println("Это запись номер "+ i +dataManager.getHistory().getHistoryList());
-        }
-        dataManager.getTaskById(1);
-        System.out.println(dataManager.getHistory().getHistoryList());
-        dataManager.getTaskById(1);
-        System.out.println(dataManager.getTaskById(2));
-        System.out.println(dataManager.getHistory().getHistoryList());
-        System.out.println(dataManager.getHistory().getHistoryList().size());
-
-        for (int i=0; i<10;i++) {
-            System.out.println("Это запись номер "+ i +" "+dataManager.getHistory().getHistoryList().get(i));
-        }
-        dataManager.getTaskById(0);
+        //проверика, что при удалении из истории эпик задачи также удаляются записи о подзадачах
         System.out.println();
-        for (int i=0; i<10;i++) {
-            System.out.println("Это запись номер "+ i +" "+dataManager.getHistory().getHistoryList().get(i));
+        taskManager.getHistory().removeFromHistory(1);
+
+        for (TemplateTask t : taskManager.getHistory().getHistoryList()) {
+            System.out.println(t);
         }
 
-        //тестируем возврат объекта с интерфейсом TaskManager
-        System.out.println(dataManager);
-        System.out.println(Managers.getDefault());
-        System.out.println("Была история "+ dataManager.getHistory().getHistoryList());
-        dataManager.getHistory().getHistoryList().clear();
-        System.out.println("Очистили историю "+ dataManager.getHistory().getHistoryList());
-
-        dataManager.getEpicTaskById(1);
-        System.out.println(dataManager.getHistory().getHistoryList());
-        System.out.println(dataManager.getHistory().getHistoryList().size());
-
-        for (int i = 0; i< dataManager.getHistory().getHistoryList().size(); i++) {
-            System.out.println("Это запись номер "+ i +" "+ dataManager.getHistory().getHistoryList().get(i));
-        }
-
-        for (int i=1; i<=10;i++) {
-            dataManager.getTaskById(0);
-                   }
-        for (int i = 0; i< dataManager.getHistory().getHistoryList().size(); i++) {
-            System.out.println("Это запись номер "+ i +" "+ dataManager.getHistory().getHistoryList().get(i));
-        }
-
-        dataManager.getEpicTaskById(1);
-        dataManager.getTaskById(2);
-        dataManager.getSubTaskById(2);
-
+        //проверка метода удаления из истории
         System.out.println();
-        for (int i = 0; i< dataManager.getHistory().getHistoryList().size(); i++) {
-            System.out.println("Это запись номер "+ (i+1) +" "+ dataManager.getHistory().getHistoryList().get(i));
+        taskManager.getHistory().removeFromHistory(2);
+
+        for (TemplateTask t : taskManager.getHistory().getHistoryList()) {
+            System.out.println(t);
         }
 
-        dataManager.getEpicTaskById(1);
-        dataManager.getSubTaskById(1);
+        //проверка что при удалении самой задачи запись о ней и о подзадачах также из истории уходят
+     taskManager.deleteTaskById(2);
+     //taskManager.deleteTaskById(2);
+     System.out.println();
+     for (TemplateTask t : taskManager.getHistory().getHistoryList()) {
+      System.out.println(t);
+     }
 
-        for (int i = 0; i< dataManager.getHistory().getHistoryList().size(); i++) {
-            System.out.println("Это запись номер "+ (i+1) +" "+ dataManager.getHistory().getHistoryList().get(i));
-        }
-    */
+    //проверка что при удалении подзадачи запись о ней также из истории уходит
+     taskManager.deleteSubTaskByID(12);
+     System.out.println();
+     for (TemplateTask t : taskManager.getHistory().getHistoryList()) {
+      System.out.println(t);
+           }
 
+        */
     }
 }

@@ -1,35 +1,31 @@
+//Изменен подход к хранению данных.
+//Было: в HashMap сохраняются только задачи  (ключ - ID задачи, элемент - сам объект), а все существующие подзадачи для всех задач
+//накапливаются в едином списке для хранения всех объектов класса подзадача.
+//Таким образом, существовало два самостоятельных хранилища, взаимодействие которых реализовывалось через ID основной задачи.
+
+//Стало: в HashMap сохраняются только задачи - осталось без изменений.
+//Хранение подзадач теперь осуществляется в списке, который является полем объекта-задачи, то есть не существует сам по себе.
 
 package Manager;
 
 import Interfaces.TaskManager;
-import Model.Epic;
 import Model.SubTask;
 import Model.Task;
+import Model.TemplateTask;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class InMemoryTaskManager implements TaskManager {
-    private static final int NEW = 1;
-    private static final int IN_PROGRESS = 2;
-    private static final int DONE = 3;
 
-    private ArrayList<Integer> existingIdList = new ArrayList<>();
-    private HashMap<Integer, Task> allTasksList = new HashMap<>();
-    private ArrayList<SubTask> allSubTasksList = new ArrayList<>();
+    private Map<Integer, Task> allTasksList = new HashMap<>();
 
-    private InMemoryHistoryManager history = Managers.getDefaultHistory();
+    private InMemoryHistoryManager history;
 
-    /**
-     * getters/setters
-     */
-    public ArrayList<Integer> getExistingIdList() {
-        return existingIdList;
-    }
-
-    public HashMap<Integer, Task> getAllTasksList() {
-        return allTasksList;
+    public InMemoryTaskManager(InMemoryHistoryManager history) {
+        this.history = history;
     }
 
     public InMemoryHistoryManager getHistory() {
@@ -37,308 +33,258 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public ArrayList<SubTask> getAllSubTasksList() {
-        return allSubTasksList;
-    }
-
-    @Override
-    public Task createTask(String taskName,
-                           String taskDescription,
-                           boolean isEpic,
-                           Integer taskStatus) {
-
-        Task task = new Task(taskName, taskDescription, isEpic, taskStatus);
-        allTasksList.put(task.getTaskId(), task);
-        existingIdList.add(task.getTaskId());
-
-        return task;
-    }
-
-    @Override
-    public Task createEmptyTask() {
-
+    public Task createNewTask() {
         Task task = new Task();
         allTasksList.put(task.getTaskId(), task);
-        existingIdList.add(task.getTaskId());
         return task;
     }
 
     @Override
-    public Task getTaskById(Integer id) {
-        if (!allTasksList.containsKey(id)) {
-            return null;
-        } else {
-            Task task = allTasksList.get(id);
-
-            if (task.isEpic()) {
-                Epic epic = new Epic();
-                epic.setEpicTask(getAllTasksList().get(id));
-                epic.setEpicSubTasks(getSubTasksListByTaskId(id));
-                history.updateHistoryList(epic);
-            } else history.updateHistoryList(task);
-            return task;
-        }
+    public Task createNewTask(String taskName, String taskDescription) {
+        Task task = new Task(taskName, taskDescription);
+        allTasksList.put(task.getTaskId(), task);
+        return task;
     }
 
     @Override
-    public String updateTaskById(Task task, int taskId) {
-        if (!allTasksList.containsKey(taskId)) {
-            return Errors.nonExistingTaskId;
-        } else {
-            task.setTaskId(taskId);
-            allTasksList.put(taskId, task);
-            updateTaskStatus(task.getTaskId());
-            return Errors.operationSuccessful;
-        }
+    public void createNewTask(Task task) {
+        allTasksList.put(task.getTaskId(), task);
     }
 
     @Override
-    public void removeAllTasks() {
-        allTasksList.clear();
-        existingIdList.clear();
-        allSubTasksList.clear();
-    }
-
-    @Override
-    public String removeTaskById(Integer id) {
-        if (!allTasksList.containsKey(id)) {
-            return Errors.nonExistingTaskId;
-        }
-        allTasksList.remove(id);
-        existingIdList.remove(existingIdList.indexOf(id));
-        deleteAllSubtasksByTaskId(id);
-
-        return Errors.operationSuccessful;
-
-    }
-
-    @Override
-    public SubTask createSubTask(int mainTaskId, String subTaskName, Integer subTaskStatus) {
+    public SubTask createSubTask(int mainTaskId) {
         if (!allTasksList.containsKey(mainTaskId)) {
             return null;
         } else {
-            SubTask subTask = new SubTask(mainTaskId, subTaskName, subTaskStatus);
-
-            allSubTasksList.add(subTask);
+            SubTask subTask = new SubTask();
+            getAllTasksList().get(mainTaskId).getSubTasksList().add(subTask);
             updateTaskStatus(mainTaskId);
-            allTasksList.get(mainTaskId).setEpic(true);
+            if (!getAllTasksList().get(mainTaskId).getSubTasksList().isEmpty()) {
+                getAllTasksList().get(mainTaskId).setEpic(true);
+            }
             return subTask;
         }
     }
 
     @Override
-    public Integer getSubTaskIdByName(String subTaskName) {
-        for (SubTask subTask : allSubTasksList) {
-            if (subTask.getSubTaskName().equalsIgnoreCase(subTaskName)) {
-                return subTask.getSubTaskId();
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public String getSubTaskNameById(Integer id) {
-        for (SubTask subTask : allSubTasksList) {
-            if (subTask.getSubTaskId() == id) {
-                return subTask.getSubTaskName();
-            }
-        }
-        return Errors.nonExistingTaskId;
-    }
-
-    @Override
-    public SubTask getSubTaskById(Integer id) {
-
-        for (SubTask subTask : allSubTasksList) {
-            if (subTask.getSubTaskId() == id) {
-                history.updateHistoryList(subTask);
-
-                return subTask;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public ArrayList<SubTask> getSubTasksListByTaskId(Integer id) {
-        ArrayList<SubTask> subTasksListByTaskId = new ArrayList<>();
-
-        for (SubTask subTask : allSubTasksList) {
-            if (subTask.getMainTaskId() == id) {
-                subTasksListByTaskId.add(subTask);
-            }
-        }
-        return subTasksListByTaskId;
-    }
-
-    @Override
-    public void deleteAllSubtasks() {
-        allSubTasksList.clear();
-
-        for (Task task : allTasksList.values()) {
-            task.setEpic(false);
-        }
-    }
-
-    @Override
-    public void deleteAllSubtasksByTaskId(Integer id) {
-        Iterator<SubTask> ite = allSubTasksList.iterator();
-
-        while (ite.hasNext()) {
-            SubTask subTask = ite.next();
-            if (subTask.getMainTaskId() == id) {
-                ite.remove();
-            }
-        }
-        allTasksList.get(id).setEpic(false);
-    }
-
-    @Override
-    public String deleteSubtaskByItsId(Integer id) {
-        int index = 0;
-        for (SubTask sub : allSubTasksList) {
-            if (sub.getSubTaskId() == id) {
-                int mainId = sub.getMainTaskId();
-                allSubTasksList.remove(index);
-                updateTaskStatus(mainId);
-
-                allTasksList.get(mainId).setEpic(false);
-                for (SubTask subTask : allSubTasksList) {
-                    if (subTask.getMainTaskId() == mainId) {
-                        allTasksList.get(mainId).setEpic(true);
-                    }
-                }
-                return Errors.operationSuccessful;
-            }
-            index++;
-        }
-        return Errors.noSubtaskFound;
-    }
-
-    @Override
-    public String updateSubTask(SubTask subTask, int subTaskId) {
-        int index = 0;
-
-        for (SubTask sub : allSubTasksList) {
-            if (sub.getSubTaskId() == subTaskId && sub.getMainTaskId() == subTask.getMainTaskId()) {
-                subTask.setSubTaskId(subTaskId);
-                allSubTasksList.set(index, subTask);
-                allTasksList.get(subTask.getMainTaskId()).setEpic(true);
-                updateTaskStatus(sub.getMainTaskId());
-
-                return Errors.operationSuccessful;
-            }
-            index++;
-        }
-        return Errors.noSubtaskFound;
-    }
-
-    @Override
-    public Epic getEpicTaskById(Integer id) {
-
-        if (!getTaskById(id).isEpic()) {
+    public SubTask createSubTask(int mainTaskId, String subTaskName, TemplateTask.TaskStatus taskStatus) {
+        if (!allTasksList.containsKey(mainTaskId)) {
             return null;
-        }
-        history.getHistoryList().remove(0);
-        Epic epic = new Epic();
-        epic.setEpicTask(getTaskById(id));
-        epic.setEpicSubTasks(getSubTasksListByTaskId(id));
-        history.getHistoryList().remove(0);
-
-        history.updateHistoryList(epic);
-
-        return epic;
-    }
-
-    @Override
-    public HashMap<Integer, Task> getAllEpicTasks() {
-        HashMap<Integer, Task> allEpicTasksList = new HashMap<>();
-
-        for (Task task : allTasksList.values()) {
-            if (task.isEpic() == true) {
-                allEpicTasksList.put(task.getTaskId(), task);
-            }
-        }
-        return allEpicTasksList;
-    }
-
-    @Override
-    public HashMap<Integer, Task> getAllNonEpicTasks() {
-        HashMap<Integer, Task> allNonEpicTasksList = new HashMap<>();
-
-        for (Task task : allTasksList.values()) {
-            if (task.isEpic() == false) {
-                allNonEpicTasksList.put(task.getTaskId(), task);
-            }
-        }
-        return allNonEpicTasksList;
-    }
-
-    @Override
-    public ArrayList<Epic> getAllEpicTasksAndSubtasks() {
-        ArrayList<Epic> allEpicsAndSubtasks = new ArrayList<>();
-
-        for (Task task : allTasksList.values()) {
-            Epic epic = new Epic();
-            if (task.isEpic() == true) {
-
-                epic.setEpicTask(task);
-                epic.setEpicSubTasks(getSubTasksListByTaskId(task.getTaskId()));
-
-                allEpicsAndSubtasks.add(epic);
-            }
-        }
-        return allEpicsAndSubtasks;
-    }
-
-    @Override
-    public String updateTaskStatus(int id) {
-        if (!allTasksList.containsKey(id)) {
-            return Errors.nonExistingTaskId;
-        }
-        ArrayList<SubTask> subTasksListByTaskId = getSubTasksListByTaskId(id);
-        if (subTasksListByTaskId.isEmpty()) {
-            allTasksList.get(id).setTaskStatus(NEW);
-            return Errors.operationSuccessful;
         } else {
-            allTasksList.get(id).setTaskStatus(IN_PROGRESS);
+            SubTask subTask = new SubTask(subTaskName, taskStatus);
+            getAllTasksList().get(mainTaskId).getSubTasksList().add(subTask);
+            updateTaskStatus(mainTaskId);
+            if (!getAllTasksList().get(mainTaskId).getSubTasksList().isEmpty()) {
+                getAllTasksList().get(mainTaskId).setEpic(true);
+            }
+            return subTask;
+        }
+    }
 
-            for (SubTask sub : subTasksListByTaskId) {
-                if (sub.getSubTaskStatus() == IN_PROGRESS) {
-                    return Errors.operationSuccessful;
+    @Override
+    public Feedback createSubTask(int mainTaskId, SubTask subTask) {
+        if (!allTasksList.containsKey(mainTaskId)) {
+            return Feedback.NON_EXISTING_TASK_ID;
+        } else {
+            getAllTasksList().get(mainTaskId).getSubTasksList().add(subTask);
+            updateTaskStatus(mainTaskId);
+            if (!getAllTasksList().get(mainTaskId).getSubTasksList().isEmpty()) {
+                getAllTasksList().get(mainTaskId).setEpic(true);
+            }
+            return Feedback.SUBTASK_SUCCESSFULLY_ADDED;
+        }
+    }
+
+    @Override
+    public Task getTaskById(int id) {
+
+        history.updateHistoryList(allTasksList.get(id));
+
+        return allTasksList.get(id);
+    }
+
+    @Override
+    public SubTask getSubTaskById(int id) {
+        for (Task task : allTasksList.values()) {
+            List<SubTask> subTasksList = task.getSubTasksList();
+
+            for (SubTask subTask : subTasksList) {
+                if (subTask.getSubTaskId() == id) {
+                    history.updateHistoryList(subTask);
+                    return subTask;
                 }
             }
+        }
+        return null;
+    }
+
+    @Override
+    public List<SubTask> getAllExistingSubtasks() {
+        List<SubTask> allSubTasksList = new ArrayList<>();
+        for (Task task : allTasksList.values()) {
+            allSubTasksList.addAll(task.getSubTasksList());
+        }
+        return allSubTasksList;
+    }
+
+    @Override
+    public List<SubTask> getSubtasksForCertainTaskByID(int id) {
+        return getTaskById(id).getSubTasksList();
+    }
+
+    @Override
+    public Map<Integer, Task> getAllTasksList() {
+        return allTasksList;
+    }
+
+    @Override
+    public Map<Integer, Task> getAllEpicTasksList() {
+        Map<Integer, Task> epicTasksList = new HashMap<>();
+        for (Task task : allTasksList.values()) {
+            if (task.isEpic()) {
+                epicTasksList.put(task.getTaskId(), task);
+            }
+        }
+        return epicTasksList;
+    }
+
+    @Override
+    public Map<Integer, Task> getAllNonEpicTasksList() {
+        Map<Integer, Task> nonEpicTasksList = new HashMap<>();
+        for (Task task : allTasksList.values()) {
+            if (!task.isEpic()) {
+                nonEpicTasksList.put(task.getTaskId(), task);
+            }
+        }
+        return nonEpicTasksList;
+    }
+
+    @Override
+    public void deleteAllTasks() {
+        allTasksList.clear();
+        history.getHistoryMap().clear();
+    }
+
+    @Override
+    public void deleteTaskById(int id) {
+
+        allTasksList.remove(id);
+        history.removeFromHistory(id);
+    }
+
+    @Override
+    public Feedback deleteSubTaskByID(int subTaskID) {
+
+        for (Task task : getAllTasksList().values()) {
+            int index = 0;
+            for (SubTask sub : task.getSubTasksList()) {
+                if (sub.getSubTaskId() == subTaskID) {
+                    task.getSubTasksList().remove(index);
+
+                    if (task.getSubTasksList().isEmpty()) {
+                        getTaskById(task.getTaskId()).setEpic(false);
+                    }
+
+                    updateTaskStatus(task.getTaskId());
+                    history.removeFromHistory(subTaskID);
+                    return Feedback.SUBTASK_SUCCESSFULLY_DELETED;
+                }
+                index++;
+            }
+        }
+
+        return Feedback.FAILED_TO_DELETE_SUBTASK_NON_EXISTING_ID;
+    }
+
+    @Override
+    public void deleteAllSubTasksByTaskId(int id) {
+
+        for (SubTask sub : getAllTasksList().get(id).getSubTasksList()) {
+            history.removeFromHistory(sub.getSubTaskId());
+        }
+
+        getAllTasksList().get(id).getSubTasksList().clear();
+        getAllTasksList().get(id).setEpic(false);
+    }
+
+    @Override
+    public Feedback updateSubTask(SubTask newSubTask, int subTaskID) {
+        newSubTask.setSubTaskId(subTaskID);
+
+        for (Task task : getAllTasksList().values()) {
+            int index = 0;
+            for (SubTask sub : task.getSubTasksList()) {
+                if (sub.getSubTaskId() == subTaskID) {
+                    task.getSubTasksList().set(index, newSubTask);
+                    getTaskById(task.getTaskId()).setEpic(true);
+                    updateTaskStatus(task.getTaskId());
+
+                    return Feedback.SUBTASK_SUCCESSFULLY_UPDATED;
+                }
+                index++;
+            }
+        }
+        return Feedback.FAILED_TO_UPDATE_SUBTASK_NON_EXISTING_ID;
+    }
+
+    @Override
+    public Feedback changeTaskNameById(int taskID, String newTaskName) {
+        if (allTasksList.containsKey(taskID)) {
+            allTasksList.get(taskID).setName(newTaskName);
+            return Feedback.TASK_SUCCESSFULLY_UPDATED;
+        }
+        return Feedback.NON_EXISTING_TASK_ID;
+    }
+
+    @Override
+    public Feedback changeTaskDescriptionById(int taskID, String newTaskDescription) {
+        if (allTasksList.containsKey(taskID)) {
+            allTasksList.get(taskID).setTaskDescription(newTaskDescription);
+            return Feedback.TASK_SUCCESSFULLY_UPDATED;
+        }
+        return Feedback.NON_EXISTING_TASK_ID;
+    }
+
+    @Override
+    public Feedback changeNonEpicTaskStatusById(int taskID, TemplateTask.TaskStatus taskStatus) {
+        if (!allTasksList.containsKey(taskID)) {
+            return Feedback.NON_EXISTING_TASK_ID;
+        }
+        if (allTasksList.get(taskID).isEpic()) {
+            return Feedback.UNABLE_TO_UPDATE_STATUS_FOR_EPIC_TASK;
+        }
+        allTasksList.get(taskID).setTaskStatus(taskStatus);
+        return Feedback.TASK_SUCCESSFULLY_UPDATED;
+    }
+
+    @Override
+    public void updateTaskStatus(int taskID) {
+        List<SubTask> subTasksList = getTaskById(taskID).getSubTasksList();
+
+        for (SubTask sub : subTasksList) {
+            if (sub.getTaskStatus() == TemplateTask.TaskStatus.IN_PROGRESS) {
+                getTaskById(taskID).setTaskStatus(TemplateTask.TaskStatus.IN_PROGRESS);
+                return;
+            }
+        }
+        boolean isNew = true;
+        for (SubTask sub : subTasksList) {
+            if (sub.getTaskStatus() != TemplateTask.TaskStatus.NEW) {
+                isNew = false;
+            }
+        }
+        if (isNew) {
+            getTaskById(taskID).setTaskStatus(TemplateTask.TaskStatus.NEW);
+            return;
         }
         boolean isDone = true;
-        for (SubTask sub : subTasksListByTaskId) {
-            if (sub.getSubTaskStatus() != DONE) {
+        for (SubTask sub : subTasksList) {
+            if (sub.getTaskStatus() != TemplateTask.TaskStatus.DONE) {
                 isDone = false;
             }
         }
-        if (isDone == true) {
-            allTasksList.get(id).setTaskStatus(DONE);
-            return Errors.operationSuccessful;
-        } else if (isDone == false) {
-            boolean isNew = true;
-            for (SubTask sub : subTasksListByTaskId) {
-                if (sub.getSubTaskStatus() != NEW) {
-                    isNew = false;
-                }
-            }
-            if (isNew == true) {
-                allTasksList.get(id).setTaskStatus(NEW);
-                return Errors.operationSuccessful;
-            }
-        }
-        return Errors.operationSuccessful;
-    }
-
-    @Override
-    public String toString() {
-        return "InMemoryTaskManager{" +
-                "existingIdList=" + existingIdList +
-                ", allTasksList=" + allTasksList +
-                ", allSubTasksList=" + allSubTasksList +
-                '}';
+        if (isDone) {
+            getTaskById(taskID).setTaskStatus(TemplateTask.TaskStatus.DONE);
+        } else getTaskById(taskID).setTaskStatus(TemplateTask.TaskStatus.IN_PROGRESS);
     }
 }

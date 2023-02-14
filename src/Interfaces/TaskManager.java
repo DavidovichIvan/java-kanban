@@ -1,118 +1,101 @@
 package Interfaces;
 
-import Model.Epic;
+import Manager.Feedback;
 import Model.SubTask;
 import Model.Task;
+import Model.TemplateTask;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public interface TaskManager {
 
-    public ArrayList<SubTask> getAllSubTasksList();
+    /**
+     * methods for task creation
+     */
+    Task createNewTask();
+    Task createNewTask(String taskName, String taskDescription);
+    void createNewTask(Task task);
 
     /**
-     * Method for creation a task with pre-defined parameters
+     * methods for subtask creation
      */
-    Task createTask(String taskName,
-                    String taskDescription,
-                    boolean isEpic,
-                    Integer taskStatus);
+
+    SubTask createSubTask(int mainTaskId);
+    SubTask createSubTask(int mainTaskId, String subTaskName, TemplateTask.TaskStatus taskStatus);
+
+    Feedback createSubTask(int mainTaskId, SubTask subTask);
 
     /**
-     * Method for an empty task creation
+     * method for getting task by ID
      */
-    Task createEmptyTask();
+    Task getTaskById(int id);
 
     /**
-     * Method for getting task by its Id
+     * method for getting subtask by subtask ID
      */
-    Task getTaskById(Integer id);
+    SubTask getSubTaskById(int id);
 
     /**
-     * Method for updating existing task by its Id
+     * method for getting all existing subtasks
      */
-    String updateTaskById(Task task, int taskId);
+    List<SubTask> getAllExistingSubtasks();
 
     /**
-     * Method for removing all tasks
+     * method for getting all subtasks by task id
      */
-    void removeAllTasks();
+    List<SubTask> getSubtasksForCertainTaskByID(int id);
 
     /**
-     * Method for removing task (and its subtasks) by task Id
+     * method for getting all existing tasks
      */
-    String removeTaskById(Integer id);
+    Map<Integer, Task> getAllTasksList();
+    /**
+     * method for getting all epic tasks
+     */
+    Map<Integer, Task> getAllEpicTasksList();
 
     /**
-     * Method for a subtask creation
+     * method for getting all non-epic tasks
      */
-    SubTask createSubTask(int mainTaskId, String subTaskName, Integer subTaskStatus);
+    Map<Integer, Task> getAllNonEpicTasksList();
 
     /**
-     * Method for getting subtask Id by its name
+     * method for deleting all tasks
      */
-    Integer getSubTaskIdByName(String subTaskName);
+    void deleteAllTasks();
 
     /**
-     * Method for getting subTask name by its Id
+     * method for deleting task by ID
      */
-    String getSubTaskNameById(Integer id);
+    void deleteTaskById(int id);
 
     /**
-     * Method for getting subtasks by its task id
+     * method for deleting one certain subtask by its ID
      */
-    SubTask getSubTaskById(Integer id);
+    Feedback deleteSubTaskByID(int subTaskID);
 
     /**
-     * Method for getting all subtasks list for a certain task (by task id)
+     * method for deleting all subtasks by task ID
      */
-    ArrayList<SubTask> getSubTasksListByTaskId(Integer id);
+    void deleteAllSubTasksByTaskId(int id);
 
     /**
-     * Method for deleting all existing subtasks
+     * method for updating subtask by its ID
      */
-    void deleteAllSubtasks();
+    Feedback updateSubTask(SubTask newSubTask, int subTaskID);
 
     /**
-     * Method for deleting all subtasks for a certain task by the task id
+     * group of methods for updating task by its ID
      */
-    void deleteAllSubtasksByTaskId(Integer id);
+
+    Feedback changeTaskNameById(int taskID, String newTaskName);
+    Feedback changeTaskDescriptionById(int taskID, String newTaskDescription);
+    Feedback changeNonEpicTaskStatusById(int taskID, TemplateTask.TaskStatus taskStatus);
 
     /**
-     * Method for deleting one certain subtask by its id
+     * method for updating EpicTask status depending on subtasks' status
      */
-    String deleteSubtaskByItsId(Integer id);
-
-    /**
-     * Method for updating existing subtask by subTaskId
-     */
-    String updateSubTask(SubTask subTask, int subTaskId);
-
-    /**
-     * Method for getting an Epic object (task+related subtasks) by task id
-     */
-    Epic getEpicTaskById(Integer id);
-
-    /**
-     * Method for getting list of Model.Epic objects (without subtasks)
-     */
-    HashMap<Integer, Task> getAllEpicTasks();
-
-    /**
-     * Method for getting list of non-Model.Epic objects
-     */
-    HashMap<Integer, Task> getAllNonEpicTasks();
-
-    /**
-     * Method for getting list of all Model.Epic objects (tasks+subtasks)
-     */
-    ArrayList<Epic> getAllEpicTasksAndSubtasks();
-
-    /**
-     * Method for updating task status (new/in progress/done) for a certain task
-     */
-    String updateTaskStatus(int id);
+    void updateTaskStatus(int taskID);
 
 }
-

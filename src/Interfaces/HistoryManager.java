@@ -2,19 +2,16 @@ package Interfaces;
 
 import Model.TemplateTask;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public interface HistoryManager {
 
     /**
      * Method for updating History of views (historyList)
      */
-    void updateHistoryList(TemplateTask T);
+    void updateHistoryList(TemplateTask Task);
 
-    /**
-     * Method for getting history list
-     */
-    ArrayList<TemplateTask> getHistoryList();
+    void removeFromHistory(int id);
 
-
+    List<TemplateTask> getHistoryList();
 }

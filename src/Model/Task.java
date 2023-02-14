@@ -1,52 +1,48 @@
 package Model;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Task extends TemplateTask {
-    private static int idCounter = 0;
-    private String taskName;
-    private String taskDescription;
-    private int taskId;
+
     private boolean isEpic;
-    private int taskStatus;
-    private Map<Integer, String> taskStatusList = Map.ofEntries(
-            Map.entry(1, "НОВАЯ"),
-            Map.entry(2, "ВЫПОЛНЯЕТСЯ"),
-            Map.entry(3, "ЗАВЕРШЕНА"));
+
+    private String taskDescription;
+
+    private List<SubTask> subTasksList;
 
     public Task() {
+        super.taskId = idCounter;
+        idCounter++;
 
-        this.taskName = "Пустая задача";
-        this.taskDescription = "Описание задачи отсутствует";
         this.isEpic = false;
-        taskStatus = 1;
-        taskId = idCounter;
-        idCounter++;
+        this.name = "Имя задачи";
+        this.taskDescription = "Пустая задача";
+        this.taskStatus = TaskStatus.NEW;
+        this.subTasksList = new ArrayList<>();
     }
 
-    public Task(String taskName, String taskDescription, boolean isEpic, Integer taskStatus) {
+    public Task(String taskName, String taskDescription) {
+        super.taskId = idCounter;
+        idCounter++;
+        this.isEpic = false;
 
-        this.taskName = taskName;
+        this.name = taskName;
         this.taskDescription = taskDescription;
-        this.isEpic = isEpic;
-        this.taskStatus = taskStatus;
-        taskId = idCounter;
-        idCounter++;
+        this.taskStatus = TaskStatus.NEW;
+        this.subTasksList = new ArrayList<>();
     }
+
 
     /**
      * getters/setters
      */
-    public String getTaskName() {
-        return taskName;
-    }
-
     public int getTaskId() {
         return taskId;
     }
 
-    public void setTaskId(int taskId) {
-        this.taskId = taskId;
+    public List<SubTask> getSubTasksList() {
+        return subTasksList;
     }
 
     public boolean isEpic() {
@@ -57,26 +53,20 @@ public class Task extends TemplateTask {
         isEpic = epic;
     }
 
-    public int getTaskStatus() {
-        return taskStatus;
-    }
-
-    public void setTaskStatus(int taskStatus) {
-        this.taskStatus = taskStatus;
+    public void setTaskDescription(String taskDescription) {
+        this.taskDescription = taskDescription;
     }
 
     @Override
     public String toString() {
-        String subTask = "";
-        if (isEpic == true) {
-            subTask = "Эпик";
-        } else subTask = "Не эпик";
-
-        return
-                "Номер задачи: " + taskId
-                        + ". Задача: " + taskName
-                        + ". Описание задачи: " + taskDescription
-                        + ". Статус задачи: " + taskStatusList.get(taskStatus)
-                        + ". Вид задачи: " + subTask;
+        return "Задача:{" +
+                "ID задачи=" + taskId +
+                ", Эпик=" + isEpic +
+                ", Имя задачи='" + name + '\'' +
+                ", Описание задачи='" + taskDescription + '\'' +
+                ", Текущий статус=" + taskStatus +
+                ", Подзадачи:=" + subTasksList +
+                '}';
     }
+
 }
