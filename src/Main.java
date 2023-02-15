@@ -33,7 +33,7 @@ public class Main {
         taskManager.createSubTask(1);
         // taskManager.createSubTask(1, "Собираем хлам", TemplateClass.TaskStatus.IN_PROGRESS);
         taskManager.createSubTask(1, new SubTask());
-        System.out.println(taskManager.createSubTask(2, new SubTask("Собираем хлам", TemplateTask.TaskStatus.IN_PROGRESS))); //так норм, сразу передаем новый сабтаск, который тут же создаем и передаем что нужно в конструктор сабтаска
+        System.out.println(taskManager.createSubTask(2, new SubTask("Собираем хлам", TemplateTask.TaskStatus.IN_PROGRESS)));
 
         System.out.println(taskManager.getAllTasksList().get(1));
         System.out.println(taskManager.getTaskById(2));

@@ -1,13 +1,6 @@
-//Изменен подход к хранению данных.
-//Было: в HashMap сохраняются только задачи  (ключ - ID задачи, элемент - сам объект), а все существующие подзадачи для всех задач
-//накапливаются в едином списке для хранения всех объектов класса подзадача.
-//Таким образом, существовало два самостоятельных хранилища, взаимодействие которых реализовывалось через ID основной задачи.
-
-//Стало: в HashMap сохраняются только задачи - осталось без изменений.
-//Хранение подзадач теперь осуществляется в списке, который является полем объекта-задачи, то есть не существует сам по себе.
-
 package Manager;
 
+import Interfaces.HistoryManager;
 import Interfaces.TaskManager;
 import Model.SubTask;
 import Model.Task;
@@ -24,8 +17,8 @@ public class InMemoryTaskManager implements TaskManager {
 
     private InMemoryHistoryManager history;
 
-    public InMemoryTaskManager(InMemoryHistoryManager history) {
-        this.history = history;
+    public InMemoryTaskManager(HistoryManager history) {
+        this.history = (InMemoryHistoryManager) history;
     }
 
     public InMemoryHistoryManager getHistory() {
