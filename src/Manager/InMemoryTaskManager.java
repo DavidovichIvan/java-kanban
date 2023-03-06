@@ -13,9 +13,9 @@ import java.util.Map;
 
 public class InMemoryTaskManager implements TaskManager {
 
-    private Map<Integer, Task> allTasksList = new HashMap<>();
+    protected Map<Integer, Task> allTasksList = new HashMap<>();
 
-    private InMemoryHistoryManager history;
+    protected InMemoryHistoryManager history;
 
     public InMemoryTaskManager(HistoryManager history) {
         this.history = (InMemoryHistoryManager) history;

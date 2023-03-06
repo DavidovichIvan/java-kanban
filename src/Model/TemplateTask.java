@@ -4,11 +4,10 @@ public abstract class TemplateTask {
 
     protected static int idCounter = 1;
 
-    public int getTaskId() {
-        return taskId;
-    }
-
     protected int taskId;
+
+
+
     protected String name;
 
     public enum TaskStatus {
@@ -18,6 +17,18 @@ public abstract class TemplateTask {
     }
 
     protected TaskStatus taskStatus;
+
+    public int getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(int taskId) {
+        this.taskId = taskId;
+    }
+
+    public String getName() {
+        return name;
+    }
 
     public void setName(String name) {
         this.name = name;

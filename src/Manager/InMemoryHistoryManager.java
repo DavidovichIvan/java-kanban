@@ -1,7 +1,3 @@
-//Убрал пустую строку.
-//В методе Managers.getDefaultHistory() в сигнатуре изменил тип на интерфейс HistoryManager и сопутствующие изменения внес.
-//По скорости обработки данных разъяснения понял примерно, спасибо.
-
 package Manager;
 
 import Interfaces.HistoryManager;
@@ -13,7 +9,7 @@ import java.util.*;
 
 public class InMemoryHistoryManager implements HistoryManager {
 
-    private Map<Integer, TemplateTask> historyList = new LinkedHashMap(50, 0.8F, true);
+    private Map<Integer, TemplateTask> historyList = new LinkedHashMap<>(50, 0.8F, true);
 
     @Override
     public void updateHistoryList(TemplateTask task) {
@@ -41,5 +37,3 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 
 }
-
-//Спасибо за работу по ревью.

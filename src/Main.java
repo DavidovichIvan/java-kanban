@@ -1,153 +1,147 @@
 import Interfaces.TaskManager;
-import Manager.InMemoryHistoryManager;
-import Manager.InMemoryTaskManager;
-import Manager.Managers;
+import Manager.*;
 import Model.SubTask;
 import Model.Task;
 import Model.TemplateTask;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 public class Main {
     public static void main(String[] args) {
 
-        // InMemoryTaskManager taskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
-
-        // InMemoryTaskManager dataManager = new InMemoryTaskManager(Managers.getDefaultHistory());
-
         InMemoryTaskManager taskManager = (InMemoryTaskManager) Managers.getDefault();
 
-        // TaskManager taskManager = Managers.getDefault();
+        //---------------------------------------------------------
+        //Проверяем запись задач/подзадач и истории в файлы
+        FileBackedTasksManager taskManagerBackup =
+                (FileBackedTasksManager)Managers.getManagerWithBackup(
+                        "C:\\Users\\User\\IdeaProjects\\6th sprint\\java-kanban\\src\\DataStorage");
 
-        taskManager.createNewTask();
+        taskManagerBackup.createNewTask();
+        taskManagerBackup.createNewTask(new Task());
+        taskManagerBackup.createNewTask(new Task("Новый год", "Купить подарки"));
+        System.out.println(taskManagerBackup.getAllTasksList());
 
-        taskManager.createNewTask(new Task());
-        taskManager.createNewTask(new Task("Новый год", "Купить подарки"));
-        System.out.println(taskManager.getAllTasksList());
-
-        taskManager.deleteTaskById(3);
-        System.out.println(taskManager.getAllTasksList());
+        taskManagerBackup.deleteTaskById(3);
+        System.out.println(taskManagerBackup.getAllTasksList());
 
         SubTask sub = new SubTask("Ремонт", TemplateTask.TaskStatus.DONE);
         SubTask sub1 = new SubTask();
         System.out.println(sub1);
 
-        taskManager.createSubTask(1);
-        // taskManager.createSubTask(1, "Собираем хлам", TemplateClass.TaskStatus.IN_PROGRESS);
-        taskManager.createSubTask(1, new SubTask());
-        System.out.println(taskManager.createSubTask(2, new SubTask("Собираем хлам", TemplateTask.TaskStatus.IN_PROGRESS)));
+        taskManagerBackup.createSubTask(1);
+        taskManagerBackup.createSubTask(1, new SubTask());
+        System.out.println(taskManagerBackup.createSubTask(2, new SubTask(
+                "Собираем хлам", TemplateTask.TaskStatus.IN_PROGRESS)));
 
-        System.out.println(taskManager.getAllTasksList().get(1));
-        System.out.println(taskManager.getTaskById(2));
+        System.out.println(taskManagerBackup.getAllTasksList().get(1));
+        System.out.println(taskManagerBackup.getTaskById(2));
 
-        System.out.println(taskManager.getSubTaskById(8));
+        System.out.println(taskManagerBackup.getSubTaskById(8));
 
-        System.out.println("Выводим все существующие подзадачи: " + taskManager.getAllExistingSubtasks());
-
-        System.out.println("Выводим подзадачи для задачи по ID: " + taskManager.getSubtasksForCertainTaskByID(2));
-
-        System.out.println("Выводим все эпики: " + taskManager.getAllEpicTasksList());
-        taskManager.createNewTask();
-        System.out.println("Выводим все не эпики: " + taskManager.getAllNonEpicTasksList());
+        System.out.println("Выводим все существующие подзадачи: " + taskManagerBackup.getAllExistingSubtasks());
+        System.out.println("Выводим подзадачи для задачи по ID: " + taskManagerBackup.getSubtasksForCertainTaskByID(2));
+        System.out.println("Выводим все эпики: " + taskManagerBackup.getAllEpicTasksList());
+        taskManagerBackup.createNewTask();
+        System.out.println("Выводим все не эпики: " + taskManagerBackup.getAllNonEpicTasksList());
 
         //замена подзадачи по ее id
-        System.out.println(taskManager.getSubTaskById(8));
-        System.out.println(taskManager.updateSubTask(new SubTask("Подзадача на замену", TemplateTask.TaskStatus.IN_PROGRESS), 8));
-        System.out.println(taskManager.getSubTaskById(8));
+        System.out.println(taskManagerBackup.getSubTaskById(8));
+        System.out.println(taskManagerBackup.updateSubTask(
+                new SubTask("Подзадача на замену", TemplateTask.TaskStatus.IN_PROGRESS), 8));
+        System.out.println(taskManagerBackup.getSubTaskById(8));
 
-        //удаление всех задач
-        // System.out.println(taskManager.getAllTasksList());
-        // taskManager.deleteAllTasks();
-        // System.out.println(taskManager.getAllTasksList());
+        System.out.println(taskManagerBackup.getSubTaskById(8));
 
-        //удаление подзадачи по ее ID
-        //System.out.println(taskManager.getTaskById(2));
-        //System.out.println(taskManager.deleteSubTaskByID(8));
-        System.out.println(taskManager.getSubTaskById(8));
+        System.out.println(taskManagerBackup.getTaskById(2));
+        taskManagerBackup.deleteAllSubTasksByTaskId(2);
+        System.out.println(taskManagerBackup.getTaskById(2));
 
-        System.out.println(taskManager.getTaskById(2));
-        taskManager.deleteAllSubTasksByTaskId(2);
-        System.out.println(taskManager.getTaskById(2));
+        System.out.println(taskManagerBackup.getTaskById(1));
+        System.out.println(taskManagerBackup.changeTaskNameById(1, "Готовим ужин"));
+        System.out.println(taskManagerBackup.changeTaskDescriptionById(1, "Готовим пельмени на ужин"));
+        System.out.println(taskManagerBackup.getTaskById(1));
 
-        System.out.println(taskManager.getTaskById(1));
-        System.out.println(taskManager.changeTaskNameById(1, "Готовим ужин"));
-        System.out.println(taskManager.changeTaskDescriptionById(1, "Готовим пельмени на ужин"));
-        System.out.println(taskManager.getTaskById(1));
+        System.out.println(taskManagerBackup.getTaskById(2));
+        System.out.println(taskManagerBackup.changeNonEpicTaskStatusById(2, TemplateTask.TaskStatus.DONE));
+        System.out.println(taskManagerBackup.getTaskById(2));
 
-        System.out.println(taskManager.getTaskById(2));
-        System.out.println(taskManager.changeNonEpicTaskStatusById(2, TemplateTask.TaskStatus.DONE));
-        System.out.println(taskManager.getTaskById(2));
+        taskManagerBackup.deleteSubTaskByID(6);
 
+        taskManagerBackup.createSubTask(1, new SubTask("Лепим пельмени", TemplateTask.TaskStatus.DONE));
+        taskManagerBackup.createSubTask(1, new SubTask("Варим пельмени", TemplateTask.TaskStatus.DONE));
+        taskManagerBackup.createSubTask(1, new SubTask("Едим пельмени", TemplateTask.TaskStatus.DONE));
+        System.out.println(taskManagerBackup.getTaskById(1));
 
-        taskManager.deleteSubTaskByID(6);
-        taskManager.deleteSubTaskByID(7);
+        System.out.println(taskManagerBackup.getTaskById(2));
+        System.out.println(taskManagerBackup.getHistory().getHistoryList());
 
-        taskManager.createSubTask(1, new SubTask("Лепим пельмени", TemplateTask.TaskStatus.DONE));
-        taskManager.createSubTask(1, new SubTask("Варим пельмени", TemplateTask.TaskStatus.DONE));
-        taskManager.createSubTask(1, new SubTask("Едим пельмени", TemplateTask.TaskStatus.DONE));
-        System.out.println(taskManager.getTaskById(1));
-
-        System.out.println(taskManager.getTaskById(2));
-        System.out.println(taskManager.getHistory().getHistoryList());
-
-        taskManager.getHistory().getHistoryMap().clear();
-        System.out.println("Очистили историю " + taskManager.getHistory().getHistoryList());
+        taskManagerBackup.getHistory().getHistoryMap().clear();
+        System.out.println("Очистили историю " + taskManagerBackup.getHistory().getHistoryList());
 
         //проверка что в истории только один раз остается запись при многократном обращении к объекту
         for (int i = 1; i <= 3; i++) {
-            taskManager.getSubTaskById(11);
+            taskManagerBackup.getSubTaskById(11);
         }
-        System.out.println(taskManager.getHistory().getHistoryList());
+        System.out.println(taskManagerBackup.getHistory().getHistoryList());
 
         //проверка что добавление идет в конец истории
-        taskManager.getSubTaskById(12);
-        System.out.println(taskManager.getHistory().getHistoryList());
+        taskManagerBackup.getSubTaskById(12);
+        System.out.println(taskManagerBackup.getHistory().getHistoryList());
 
         //проверка что объект, который уже есть в истории, при повторном вызове перезаписывается в конец
-        taskManager.getSubTaskById(11);
-        System.out.println(taskManager.getHistory().getHistoryList());
+        taskManagerBackup.getSubTaskById(11);
+        System.out.println(taskManagerBackup.getHistory().getHistoryList());
 
-        //проверка отсутствия повторов и перезаписи в конец при повторном просмотре
-        taskManager.getTaskById(2);
-        taskManager.getTaskById(1);
-        taskManager.getSubTaskById(11);
-        taskManager.getSubTaskById(12);
-        taskManager.getSubTaskById(13);
         System.out.println();
 
-        for (TemplateTask t : taskManager.getHistory().getHistoryList()) {
-            System.out.println(t);
-        }
-/*
-        //проверика, что при удалении из истории эпик задачи также удаляются записи о подзадачах
-        System.out.println();
-        taskManager.getHistory().removeFromHistory(1);
-
-        for (TemplateTask t : taskManager.getHistory().getHistoryList()) {
+        for (TemplateTask t : taskManagerBackup.getHistory().getHistoryList()) {
             System.out.println(t);
         }
 
-        //проверка метода удаления из истории
-        System.out.println();
-        taskManager.getHistory().removeFromHistory(2);
+        //---------------------------------------------------------
+        System.out.println(taskManagerBackup.getAllTasksList());
+        System.out.println(taskManagerBackup.getHistory().getHistoryList());
 
-        for (TemplateTask t : taskManager.getHistory().getHistoryList()) {
-            System.out.println(t);
+        taskManagerBackup.getSubTaskById(7);
+
+        System.out.println();
+        try {
+            System.out.println(Files.readString(Path.of(taskManagerBackup.getDataFilePath())));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
-        //проверка что при удалении самой задачи запись о ней и о подзадачах также из истории уходят
-     taskManager.deleteTaskById(2);
-     //taskManager.deleteTaskById(2);
-     System.out.println();
-     for (TemplateTask t : taskManager.getHistory().getHistoryList()) {
-      System.out.println(t);
-     }
+        System.out.println();
 
-    //проверка что при удалении подзадачи запись о ней также из истории уходит
-     taskManager.deleteSubTaskByID(12);
-     System.out.println();
-     for (TemplateTask t : taskManager.getHistory().getHistoryList()) {
-      System.out.println(t);
-           }
+        taskManagerBackup.getTaskById(1);
+        taskManagerBackup.getTaskById(2);
+        //-----------------------------------------------------------------------------------------
+        //Проверяем создание объекта с восстановлением задач из файла
+        File file = new File("C:\\Users\\User\\IdeaProjects\\6th sprint\\java-kanban\\src\\DataStorage");
+        FileBackedTasksManager taskManagerBackup1;
 
-        */
+        try {
+            taskManagerBackup1 = FileBackedTasksManager.loadFromFile(file);
+        } catch (
+                IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        for (Task t : taskManagerBackup1.getAllTasksList().values()) {
+            System.out.println(t);
+        }
+        System.out.println();
+
+        //Проверяем восстановление истории
+        for (TemplateTask t : taskManagerBackup1.getHistory().getHistoryList()) {
+            System.out.println(t);
+        }
     }
 }
