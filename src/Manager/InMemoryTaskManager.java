@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static Manager.Managers.getDefaultHistory;
+
 public class InMemoryTaskManager implements TaskManager {
 
     protected Map<Integer, Task> allTasksList = new HashMap<>();
@@ -30,6 +32,11 @@ public class InMemoryTaskManager implements TaskManager {
         Task task = new Task();
         allTasksList.put(task.getTaskId(), task);
         return task;
+    }
+
+    public static TaskManager getManager() {
+        return new InMemoryTaskManager(getDefaultHistory());
+
     }
 
     @Override

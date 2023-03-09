@@ -1,12 +1,34 @@
-/* Практически весь новый код по шестому ТЗ в этом классе.
+/*
+1. class ManagerSaveException extends Exception переделал на непроверяемое - extends RuntimeException
+2. try-catch поубирал лишние
+3. метод loadTaskFromFile изменил доступ на public
 
-По мере усложнения программы уже с трудом получается всю структуру и взаимосвязи
-держать в голове, но в целом интересно. */
+4. По статическому методу для файлового менеджера.
+Не уверен что понял правильно.
+Как я понял идея в том, чтобы был static метод с одним именем, который в зависимости от вызывающего класса возращает
+нужный объект, что в общем-то логично.
+В примере в статье (https://habr.com/ru/post/571502/) у наследников переопределяется метод с одной сигнатурой.
+У меня сигнатуры разные, так как для менеджера с сохранением я передаю путь к файлу.
+
+В итоге получилось так:
+
+1. Новый метод getManager() в классе InMemoryTaskManager
+(Как я понял static метод не может быть переопределен, поэтому в интерфейс TaskManager он не попал);
+2. В классе-наследнике (FileBackedTasksManager) метод перегружен с параметром - getManager(String dataPath).
+3. Утилитарный класс Managers создает объекты не напрямую, а посредством метода getManager.
+
+При этом вижу проблему такую, что если из FileBackedTasksManager вызвать метод getManager() без параметров, то
+он обратится к родительскому методу, что логикой программы не предусмотрено.
+Можно сделать проверяемое исключение на эту тему и попросить условного пользователя указать путь.
+Но как-то это все не похоже на изящное решение.
+
+ */
 
 package Manager;
 
 import Exceptions.ManagerSaveException;
 import Interfaces.HistoryManager;
+import Interfaces.TaskManager;
 import Model.SubTask;
 import Model.Task;
 import Model.TemplateTask;
@@ -40,6 +62,16 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     public String getDataFilePath() {
         return dataFilePath;
     }
+
+
+
+    public static TaskManager getManager(String dataPath) {
+        return new FileBackedTasksManager(getDefaultHistory(), dataPath);
+         }
+
+
+
+
 
     @Override
     public Task createNewTask() {
@@ -166,19 +198,14 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
      *
      * @param dataPath = full path to .csv files
      */
-    private void setFileForDataStorage(String dataPath) {
+    private void setFileForDataStorage(String dataPath) throws ManagerSaveException {
         try {
             Files.createFile(Path.of(dataPath));
         } catch (IOException e) {
             try (FileWriter fileWr = new FileWriter(dataPath, StandardCharsets.UTF_8)) {
                 fileWr.write("");
             } catch (IOException ex) {
-                try {
-                    throw new ManagerSaveException(dataFilePath);
-                } catch (ManagerSaveException exc) {
-                    System.out.println(exc.getMessage());
-                    System.out.println(exc.getFilePath());
-                }
+                throw new ManagerSaveException(dataFilePath);
             }
         }
     }
@@ -193,7 +220,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     /**
      * Auxiliary method for writing a Task to a certain file
      */
-    private void saveTask(Task t, String dataPath) {
+    private void saveTask(Task t, String dataPath) throws ManagerSaveException {
         try (FileWriter fileWriter = new FileWriter(dataPath, StandardCharsets.UTF_8, true)) {
 
             fileWriter.write(t.getTaskId() + "," +
@@ -214,12 +241,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             }
 
         } catch (IOException e) {
-            try {
-                throw new ManagerSaveException(dataFilePath);
-            } catch (ManagerSaveException ex) {
-                System.out.println(ex.getMessage());
-                System.out.println(ex.getFilePath());
-            }
+            throw new ManagerSaveException(dataFilePath);
         }
 
     }
@@ -246,12 +268,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 try (FileWriter fileWriter = new FileWriter(historyFilePath, StandardCharsets.UTF_8, true)) {
                     fileWriter.write(",,," + subTaskToString((SubTask) t) + "\n");
                 } catch (IOException e) {
-                    try {
-                        throw new ManagerSaveException(historyFilePath);
-                    } catch (ManagerSaveException ex) {
-                        System.out.println(ex.getMessage());
-                        System.out.println(ex.getFilePath());
-                    }
+                    throw new ManagerSaveException(historyFilePath);
                 }
             }
         }
@@ -293,7 +310,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
      * Auxiliary method for creation a Task during loading from file
      */
 
-    private static Task loadTaskFromFile(String str) {
+    public static Task loadTaskFromFile(String str) {
 
         String[] lineContents = str.split(",,,");
         String[] taskByStrings = lineContents[0].split(",");

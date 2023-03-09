@@ -3,7 +3,7 @@ package Exceptions;
 
 import Manager.Feedback;
 
-public class ManagerSaveException extends Exception {
+public class ManagerSaveException extends RuntimeException {
 
     final private String message;
     final private String filePath;

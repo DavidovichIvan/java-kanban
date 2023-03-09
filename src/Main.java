@@ -20,8 +20,8 @@ public class Main {
         //---------------------------------------------------------
         //Проверяем запись задач/подзадач и истории в файлы
         FileBackedTasksManager taskManagerBackup =
-                (FileBackedTasksManager)Managers.getManagerWithBackup(
-                        "C:\\Users\\User\\IdeaProjects\\6th sprint\\java-kanban\\src\\DataStorage");
+                (FileBackedTasksManager) Managers.getManagerWithBackup(
+                         "C:\\Users\\Вуня\\Desktop\\dev\\6th sprint\\java-kanban\\src\\DataStorage");
 
         taskManagerBackup.createNewTask();
         taskManagerBackup.createNewTask(new Task());
@@ -124,7 +124,7 @@ public class Main {
         taskManagerBackup.getTaskById(2);
         //-----------------------------------------------------------------------------------------
         //Проверяем создание объекта с восстановлением задач из файла
-        File file = new File("C:\\Users\\User\\IdeaProjects\\6th sprint\\java-kanban\\src\\DataStorage");
+        File file = new File("C:\\Users\\Вуня\\Desktop\\dev\\6th sprint\\java-kanban\\src\\DataStorage");
         FileBackedTasksManager taskManagerBackup1;
 
         try {
