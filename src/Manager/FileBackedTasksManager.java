@@ -1,28 +1,3 @@
-/*
-1. class ManagerSaveException extends Exception переделал на непроверяемое - extends RuntimeException
-2. try-catch поубирал лишние
-3. метод loadTaskFromFile изменил доступ на public
-
-4. По статическому методу для файлового менеджера.
-Не уверен что понял правильно.
-Как я понял идея в том, чтобы был static метод с одним именем, который в зависимости от вызывающего класса возращает
-нужный объект, что в общем-то логично.
-В примере в статье (https://habr.com/ru/post/571502/) у наследников переопределяется метод с одной сигнатурой.
-У меня сигнатуры разные, так как для менеджера с сохранением я передаю путь к файлу.
-
-В итоге получилось так:
-
-1. Новый метод getManager() в классе InMemoryTaskManager
-(Как я понял static метод не может быть переопределен, поэтому в интерфейс TaskManager он не попал);
-2. В классе-наследнике (FileBackedTasksManager) метод перегружен с параметром - getManager(String dataPath).
-3. Утилитарный класс Managers создает объекты не напрямую, а посредством метода getManager.
-
-При этом вижу проблему такую, что если из FileBackedTasksManager вызвать метод getManager() без параметров, то
-он обратится к родительскому методу, что логикой программы не предусмотрено.
-Можно сделать проверяемое исключение на эту тему и попросить условного пользователя указать путь.
-Но как-то это все не похоже на изящное решение.
-
- */
 
 package Manager;
 
@@ -39,7 +14,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static Manager.Managers.getDefaultHistory;
 
@@ -64,13 +44,10 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     }
 
 
-
-    public static TaskManager getManager(String dataPath) {
-        return new FileBackedTasksManager(getDefaultHistory(), dataPath);
-         }
-
-
-
+    public void setAllTasksList(Map<Integer, Task> allTasksList) {
+        super.setAllTasksList(allTasksList);
+        saveData();
+    }
 
 
     @Override
@@ -151,10 +128,11 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     }
 
     @Override
-    public void deleteAllSubTasksByTaskId(int id) {
-        super.deleteAllSubTasksByTaskId(id);
+    public Feedback deleteAllSubTasksByTaskId(int id) {
+        Feedback f = super.deleteAllSubTasksByTaskId(id);
         saveData();
         saveHistory();
+        return f;
     }
 
     @Override
@@ -191,14 +169,61 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         saveData();
     }
 
-    //Новые методы
+    //------------------------------------------new
+    @Override
+    public Feedback setTaskStartTime(int taskID, Instant startTime) {
+        Feedback f = super.setTaskStartTime(taskID, startTime);
+        saveData();
+        return f;
+    }
+
+    @Override
+    public Feedback setSubTaskStartTime(int taskID, int subId, Instant startTime) {
+        Feedback f = super.setSubTaskStartTime(taskID, subId, startTime);
+        saveData();
+        return f;
+    }
+
+    @Override
+    public Feedback setNonEpicTaskDuration(int taskID, long durationInMinutes) {
+        Feedback f = super.setNonEpicTaskDuration(taskID, durationInMinutes);
+        saveData();
+        return f;
+
+    }
+
+    @Override
+    public Feedback setSubTaskDuration(int taskID, int subId, long durationInMinutes) {
+        Feedback f = super.setSubTaskDuration(taskID, subId, durationInMinutes);
+        saveData();
+        return f;
+    }
+
+    @Override
+    public Feedback organizeSubTasksScheduleForSingleTask(int taskID) {
+        Feedback f = super.organizeSubTasksScheduleForSingleTask(taskID);
+        saveData();
+        return f;
+    }
+
+    @Override
+    public Feedback organizeScheduleForAllTasks() {
+        Feedback f = super.organizeScheduleForAllTasks();
+        saveData();
+        return f;
+    }
+
+    @Override
+    public ArrayList<Task> getPrioritizedTasks(HashMap<Integer, Task> allTasksList) {
+        return super.getPrioritizedTasks(allTasksList);
+    }
 
     /**
      * Auxiliary method for creating file or clearing up an existing one
      *
      * @param dataPath = full path to .csv files
      */
-    private void setFileForDataStorage(String dataPath) throws ManagerSaveException {
+    public void setFileForDataStorage(String dataPath) throws ManagerSaveException {
         try {
             Files.createFile(Path.of(dataPath));
         } catch (IOException e) {
@@ -213,21 +238,33 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     /**
      * Auxiliary method for a SubTask to be represented as a string
      */
-    private String subTaskToString(SubTask s) {
-        return (s.getSubTaskId() + "," + s.getName() + "," + s.getTaskStatus() + ",");
+    public String subTaskToString(SubTask s) {
+        return (s.getSubTaskId() + ","
+                + s.getName() + ","
+                + s.getTaskStatus() + ","
+                + s.getTaskCreationTime() + ","
+                + s.getTaskStartTime() + ","
+                + s.getTaskDuration() + ","
+                + s.getTaskEndTime()
+        );
     }
 
     /**
      * Auxiliary method for writing a Task to a certain file
      */
-    private void saveTask(Task t, String dataPath) throws ManagerSaveException {
+    public void saveTask(Task t, String dataPath) throws ManagerSaveException {
         try (FileWriter fileWriter = new FileWriter(dataPath, StandardCharsets.UTF_8, true)) {
 
             fileWriter.write(t.getTaskId() + "," +
                     t.isEpic() + "," +
                     t.getName() + "," +
                     t.getTaskDescription() + "," +
-                    t.getTaskStatus());
+                    t.getTaskStatus() + "," +
+                    t.getTaskCreationTime() + "," +
+                    t.getTaskStartTime() + "," +
+                    t.getTaskDuration() + "," +
+                    t.getTaskEndTime()
+            );
 
             if (!t.isEpic()) {
                 fileWriter.write("\n");
@@ -321,6 +358,10 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         task.setName(taskByStrings[2]);
         task.setTaskDescription(taskByStrings[3]);
         task.setTaskStatus(TemplateTask.TaskStatus.valueOf(taskByStrings[4]));
+        task.setTaskCreationTime(Instant.parse(taskByStrings[5]));
+        task.setTaskStartTime(Instant.parse(taskByStrings[6]));
+        task.setTaskDuration(Duration.parse(taskByStrings[7]));
+        task.setTaskEndTime(Instant.parse(taskByStrings[8]));
 
         if (lineContents.length == 2) {
             String[] AllSubTasksInStrings = lineContents[1].split(",,");
@@ -336,12 +377,16 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     /**
      * Auxiliary method for creation a SubTask during loading from file
      */
-    private static SubTask loadSubTaskFromFile(String str) {
+    public static SubTask loadSubTaskFromFile(String str) {
         String[] subTaskInStrings = str.split(",");
         SubTask subTask = new SubTask();
         subTask.setSubTaskId(Integer.parseInt(subTaskInStrings[0]));
         subTask.setName(subTaskInStrings[1]);
         subTask.setTaskStatus(TemplateTask.TaskStatus.valueOf(subTaskInStrings[2]));
+        subTask.setTaskCreationTime(Instant.parse(subTaskInStrings[3]));
+        subTask.setTaskStartTime(Instant.parse(subTaskInStrings[4]));
+        subTask.setTaskDuration(Duration.parse(subTaskInStrings[5]));
+        subTask.setTaskEndTime(Instant.parse(subTaskInStrings[6]));
         return subTask;
     }
 }

@@ -5,6 +5,9 @@ import Model.SubTask;
 import Model.Task;
 import Model.TemplateTask;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +18,9 @@ public interface TaskManager {
      * methods for task creation
      */
     Task createNewTask();
+
     Task createNewTask(String taskName, String taskDescription);
+
     void createNewTask(Task task);
 
     /**
@@ -23,6 +28,7 @@ public interface TaskManager {
      */
 
     SubTask createSubTask(int mainTaskId);
+
     SubTask createSubTask(int mainTaskId, String subTaskName, TemplateTask.TaskStatus taskStatus);
 
     Feedback createSubTask(int mainTaskId, SubTask subTask);
@@ -51,6 +57,7 @@ public interface TaskManager {
      * method for getting all existing tasks
      */
     Map<Integer, Task> getAllTasksList();
+
     /**
      * method for getting all epic tasks
      */
@@ -78,8 +85,10 @@ public interface TaskManager {
 
     /**
      * method for deleting all subtasks by task ID
+     *
+     * @return
      */
-    void deleteAllSubTasksByTaskId(int id);
+    Feedback deleteAllSubTasksByTaskId(int id);
 
     /**
      * method for updating subtask by its ID
@@ -91,12 +100,60 @@ public interface TaskManager {
      */
 
     Feedback changeTaskNameById(int taskID, String newTaskName);
+
     Feedback changeTaskDescriptionById(int taskID, String newTaskDescription);
+
     Feedback changeNonEpicTaskStatusById(int taskID, TemplateTask.TaskStatus taskStatus);
 
     /**
      * method for updating EpicTask status depending on subtasks' status
      */
     void updateTaskStatus(int taskID);
+
+
+    /**
+     * method for changing Task start time
+     * * @return
+     */
+    Feedback setTaskStartTime(int taskID, Instant startTime);
+
+    /**
+     * method for changing SubTask start time
+     * * @return
+     */
+    Feedback setSubTaskStartTime(int taskID, int subId, Instant startTime);
+
+    /**
+     * method for changing NonEpicTask Duration
+     * * @return
+     */
+    Feedback setNonEpicTaskDuration(int taskID, long durationInMinutes);
+
+    /**
+     * method for changing SubTask Duration
+     * * @return
+     */
+    Feedback setSubTaskDuration(int taskID, int subId, long durationInMinutes);
+
+    /**
+     * method for setting organized schedule for a certain Task
+     * (all subtasks would be set one after another with start/end time correction if needed)
+     * * @return
+     */
+    Feedback organizeSubTasksScheduleForSingleTask(int taskID);
+
+    /**
+     * method for setting organized schedule for all Tasks
+     * (all subtasks within would be organized as well)
+     * * @return
+     */
+    Feedback organizeScheduleForAllTasks();
+
+    /**
+     * Method for getting list of time-organized Tasks
+     *
+     * @return
+     */
+    ArrayList<Task> getPrioritizedTasks(HashMap<Integer, Task> allTasksList);
 
 }

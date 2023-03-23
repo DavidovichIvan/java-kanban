@@ -6,14 +6,18 @@ import Model.SubTask;
 import Model.Task;
 import Model.TemplateTask;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static Manager.Managers.getDefaultHistory;
-
 public class InMemoryTaskManager implements TaskManager {
+
+    public void setAllTasksList(Map<Integer, Task> allTasksList) {
+        this.allTasksList = allTasksList;
+    }
 
     protected Map<Integer, Task> allTasksList = new HashMap<>();
 
@@ -31,18 +35,16 @@ public class InMemoryTaskManager implements TaskManager {
     public Task createNewTask() {
         Task task = new Task();
         allTasksList.put(task.getTaskId(), task);
+
         return task;
     }
 
-    public static TaskManager getManager() {
-        return new InMemoryTaskManager(getDefaultHistory());
-
-    }
 
     @Override
     public Task createNewTask(String taskName, String taskDescription) {
         Task task = new Task(taskName, taskDescription);
         allTasksList.put(task.getTaskId(), task);
+
         return task;
     }
 
@@ -98,9 +100,12 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task getTaskById(int id) {
 
-        history.updateHistoryList(allTasksList.get(id));
-
-        return allTasksList.get(id);
+        if (!allTasksList.containsKey(id)) {
+            return null;
+        } else {
+            history.updateHistoryList(allTasksList.get(id));
+            return allTasksList.get(id);
+        }
     }
 
     @Override
@@ -129,7 +134,11 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<SubTask> getSubtasksForCertainTaskByID(int id) {
-        return getTaskById(id).getSubTasksList();
+        if (!allTasksList.containsKey(id)) {
+            return null;
+        } else {
+            return getTaskById(id).getSubTasksList();
+        }
     }
 
     @Override
@@ -197,24 +206,30 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void deleteAllSubTasksByTaskId(int id) {
+    public Feedback deleteAllSubTasksByTaskId(int id) {
 
-        for (SubTask sub : getAllTasksList().get(id).getSubTasksList()) {
-            history.removeFromHistory(sub.getSubTaskId());
+        if (!allTasksList.containsKey(id)) {
+            return Feedback.NON_EXISTING_TASK_ID;
+        } else {
+            for (SubTask sub : getAllTasksList().get(id).getSubTasksList()) {
+                history.removeFromHistory(sub.getSubTaskId());
+            }
+
+            getAllTasksList().get(id).getSubTasksList().clear();
+            getAllTasksList().get(id).setEpic(false);
+            return Feedback.SUBTASKS_SUCCESSFULLY_DELETED;
         }
-
-        getAllTasksList().get(id).getSubTasksList().clear();
-        getAllTasksList().get(id).setEpic(false);
     }
 
     @Override
     public Feedback updateSubTask(SubTask newSubTask, int subTaskID) {
-        newSubTask.setSubTaskId(subTaskID);
 
+        newSubTask.setSubTaskId(subTaskID);
         for (Task task : getAllTasksList().values()) {
             int index = 0;
             for (SubTask sub : task.getSubTasksList()) {
                 if (sub.getSubTaskId() == subTaskID) {
+
                     task.getSubTasksList().set(index, newSubTask);
                     getTaskById(task.getTaskId()).setEpic(true);
                     updateTaskStatus(task.getTaskId());
@@ -287,4 +302,153 @@ public class InMemoryTaskManager implements TaskManager {
             getTaskById(taskID).setTaskStatus(TemplateTask.TaskStatus.DONE);
         } else getTaskById(taskID).setTaskStatus(TemplateTask.TaskStatus.IN_PROGRESS);
     }
+
+    @Override
+    public Feedback setTaskStartTime(int taskID, Instant startTime) {
+
+        if (!allTasksList.containsKey(taskID)) {
+            return Feedback.NON_EXISTING_TASK_ID;
+        }
+
+        if (!getTaskById(taskID).isEpic() || (!getTaskById(taskID).isEpic()
+                && getTaskById(taskID).getSubTasksList().isEmpty())) {
+            getTaskById(taskID).setTaskStartTime(startTime);
+            getTaskById(taskID).setTaskEndTime(getTaskById(taskID).calculateTaskEndTime());
+        } else if (getTaskById(taskID).isEpic() && !getTaskById(taskID).getSubTasksList().isEmpty()) {
+            getTaskById(taskID).setTaskStartTime(startTime);
+
+            getTaskById(taskID).setSubTasksList(TimeOptimizer.subTasksTimeOrganizer(getTaskById(taskID)));
+            setTaskEndTimeByLastSubtaskTimeAndRecalculateTaskDuration(taskID);
+
+        }
+
+        return Feedback.START_TIME_SUCCESSFULLY_UPDATED;
+    }
+
+    @Override
+    public Feedback setSubTaskStartTime(int taskID, int subId, Instant startTime) {
+        if (!allTasksList.containsKey(taskID)) {
+            return Feedback.NON_EXISTING_TASK_ID;
+        }
+
+        int subTaskIndexInSubTasksList = 0;
+        boolean isSubInsideTask = false;
+
+        for (SubTask s : allTasksList.get(taskID).getSubTasksList()) {
+
+            if (s.getSubTaskId() == subId) {
+                isSubInsideTask = true;
+                break;
+            }
+            subTaskIndexInSubTasksList++;
+        }
+
+        if (!isSubInsideTask) {
+            return Feedback.NO_SUCH_SUBTASK_ID_FOR_TASK_GIVEN;
+        }
+
+        if (startTime.isBefore(allTasksList.get(taskID).getTaskStartTime())) {
+            allTasksList.get(taskID).setTaskStartTime(startTime);
+        }
+
+        allTasksList.get(taskID).getSubTasksList().get(subTaskIndexInSubTasksList).setTaskStartTime(startTime);
+        allTasksList.get(taskID).setSubTasksList(TimeOptimizer.subTasksTimeOrganizer(allTasksList.get(taskID)));
+        setTaskEndTimeByLastSubtaskTimeAndRecalculateTaskDuration(taskID);
+
+        return Feedback.START_TIME_SUCCESSFULLY_UPDATED;
+    }
+
+    /**
+     * Auxiliary method for Task end time correction depending on last Subtask ending time
+     *
+     * @param taskID
+     */
+    public void setTaskEndTimeByLastSubtaskTimeAndRecalculateTaskDuration(int taskID) {
+        int lastElement = getTaskById(taskID).getSubTasksList().size() - 1;
+        Instant lastSubEndTime = getTaskById(taskID).getSubTasksList().get(lastElement).getTaskEndTime();
+        getTaskById(taskID).setTaskEndTime(lastSubEndTime);
+
+        Instant start = getTaskById(taskID).getTaskStartTime();
+        Instant finish = getTaskById(taskID).getTaskEndTime();
+
+        getTaskById(taskID).setTaskDuration(Duration.between(start, finish));
+
+    }
+
+    @Override
+    public Feedback setNonEpicTaskDuration(int taskID, long durationInMinutes) {
+        if (!allTasksList.containsKey(taskID)) {
+            return Feedback.NON_EXISTING_TASK_ID;
+        }
+
+        if (allTasksList.get(taskID).isEpic()) {
+            return Feedback.UNABLE_TO_CHANGE_DURATION_FOR_EPIC_TASK;
+        }
+
+        allTasksList.get(taskID).setTaskDuration(Duration.ofMinutes(durationInMinutes));
+        allTasksList.get(taskID).setTaskEndTime(allTasksList.get(taskID).calculateTaskEndTime());
+
+        return Feedback.DURATION_UPDATED;
+    }
+
+    @Override
+    public Feedback setSubTaskDuration(int taskID, int subId, long durationInMinutes) {
+        if (!allTasksList.containsKey(taskID)) {
+            return Feedback.NON_EXISTING_TASK_ID;
+        }
+
+        int subTaskIndexInSubTasksList = 0;
+        boolean isSubInsideTask = false;
+
+        for (SubTask s : allTasksList.get(taskID).getSubTasksList()) {
+
+            if (s.getSubTaskId() == subId) {
+                isSubInsideTask = true;
+                break;
+            }
+            subTaskIndexInSubTasksList++;
+        }
+
+        if (isSubInsideTask == false) {
+            return Feedback.NO_SUCH_SUBTASK_ID_FOR_TASK_GIVEN;
+        }
+
+        allTasksList.get(taskID).getSubTasksList()
+                .get(subTaskIndexInSubTasksList).setTaskDuration(Duration.ofMinutes(durationInMinutes));
+        allTasksList.get(taskID).setSubTasksList(TimeOptimizer.subTasksTimeOrganizer(allTasksList.get(taskID)));
+        setTaskEndTimeByLastSubtaskTimeAndRecalculateTaskDuration(taskID);
+
+        return Feedback.DURATION_UPDATED;
+
+    }
+
+    @Override
+    public Feedback organizeSubTasksScheduleForSingleTask(int taskID) {
+        if (!allTasksList.containsKey(taskID)) {
+            return Feedback.NON_EXISTING_TASK_ID;
+        }
+
+        if (getTaskById(taskID).isEpic() && !getTaskById(taskID).getSubTasksList().isEmpty()) {
+            getTaskById(taskID).setSubTasksList(TimeOptimizer.subTasksTimeOrganizer(getTaskById(taskID)));
+            return Feedback.SUBTASKS_SCHEDULE_UPDATED;
+        } else return Feedback.NO_SUBTASKS_TO_BE_RESCHEDULED_FOUND;
+    }
+
+    @Override
+    public Feedback organizeScheduleForAllTasks() {
+        if (allTasksList.isEmpty()) {
+            return Feedback.NO_TASKS_TO_BE_RESCHEDULED_FOUND;
+        }
+        setAllTasksList(TimeOptimizer.allTasksTimeOrganizer((HashMap<Integer, Task>) allTasksList));
+        return Feedback.SUBTASKS_SCHEDULE_UPDATED;
+
+    }
+
+    @Override
+    public ArrayList<Task> getPrioritizedTasks(HashMap<Integer, Task> allTasksList) {
+        return TimeOptimizer.sortedScheduleTasksList(allTasksList);
+
+    }
+
+
 }

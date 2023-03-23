@@ -7,15 +7,12 @@ public class Managers {
 
 
     public static TaskManager getDefault() {
-
-        // return new InMemoryTaskManager(getDefaultHistory());
-        return InMemoryTaskManager.getManager();
+        return new InMemoryTaskManager(getDefaultHistory());
     }
 
 
     public static TaskManager getManagerWithBackup(String dataPath) {
-        //   return new FileBackedTasksManager(getDefaultHistory(), dataPath);
-        return FileBackedTasksManager.getManager(dataPath);
+        return new FileBackedTasksManager(getDefaultHistory(), dataPath);
     }
 
     public static HistoryManager getDefaultHistory() {

@@ -1,3 +1,4 @@
+import Exceptions.ManagerSaveException;
 import Interfaces.TaskManager;
 import Manager.*;
 import Model.SubTask;
@@ -5,10 +6,14 @@ import Model.Task;
 import Model.TemplateTask;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -123,6 +128,7 @@ public class Main {
         taskManagerBackup.getTaskById(1);
         taskManagerBackup.getTaskById(2);
         //-----------------------------------------------------------------------------------------
+
         //Проверяем создание объекта с восстановлением задач из файла
         File file = new File("C:\\Users\\Вуня\\Desktop\\dev\\6th sprint\\java-kanban\\src\\DataStorage");
         FileBackedTasksManager taskManagerBackup1;
@@ -143,5 +149,64 @@ public class Main {
         for (TemplateTask t : taskManagerBackup1.getHistory().getHistoryList()) {
             System.out.println(t);
         }
+
+
+//-----Дата и время
+        for (Task t: taskManagerBackup.getAllTasksList().values()) {
+            System.out.println("Время создания задачи "+t.getTaskId()+": "+t.getTaskCreationTime());
+            for (SubTask s: t.getSubTasksList()) {
+                System.out.println("Время создания подзадачи "+s.getTaskId()+": "+s.getTaskCreationTime());
+            }
+        }
+        System.out.println("Время создания: "+taskManagerBackup.getAllTasksList().get(1).getTaskCreationTime());
+        System.out.println("Время начала: "+taskManagerBackup.getAllTasksList().get(1).getTaskStartTime());
+        System.out.println("Продолжительность: "+taskManagerBackup.getAllTasksList().get(1).getTaskDuration().toMinutes());
+        System.out.println("Время окончания: "+taskManagerBackup.getAllTasksList().get(1).getTaskEndTime());
+        System.out.println();
+
+
+        taskManagerBackup.getSubTaskById(13).setTaskCreationTime(taskManagerBackup.getSubTaskById(7).getTaskCreationTime());
+        taskManagerBackup.getSubTaskById(12).setTaskCreationTime(taskManagerBackup.getSubTaskById(7).getTaskCreationTime().minusSeconds(5));
+
+        System.out.println(taskManagerBackup.getTaskById(1).getSubTasksList());
+
+        System.out.println();
+        System.out.println("Время начала "+taskManagerBackup.getTaskById(1).getTaskStartTime());
+        System.out.println("Время окончания "+ taskManagerBackup.getTaskById(1).getTaskEndTime());
+
+        System.out.println(TimeOptimizer.subTasksTimeOrganizer(taskManagerBackup.getTaskById(1)));
+
+        System.out.println(taskManagerBackup.getTaskById(1).getTaskStartTime());
+        for (SubTask s: taskManagerBackup.getTaskById(1).getSubTasksList()) {
+            System.out.println(s.getSubTaskId() +": "+s.getTaskCreationTime() + " время начала " + s.getTaskStartTime() + " продолжительность " + s.getTaskDuration().toMinutes() + " время окончания " + s.getTaskEndTime());
+        }
+
+
+        taskManagerBackup.setTaskStartTime(1,taskManagerBackup.getTaskById(1).getTaskStartTime().plusSeconds(1200));//задали для таска новое время начала; внутри метода timeOptimizer перетряхнул все сабтаски с учтом того что время начала куда-то изменилось
+        System.out.println("Время начала "+taskManagerBackup.getTaskById(1).getTaskStartTime()); //убедились что время начала сдвинулось
+        for (SubTask s: taskManagerBackup.getTaskById(1).getSubTasksList()) {
+            System.out.println(s.getSubTaskId() +": "+s.getTaskCreationTime() + " время начала " + s.getTaskStartTime() + " продолжительность " + s.getTaskDuration().toMinutes() + " время окончания " + s.getTaskEndTime());
+        }
+
+        System.out.println("Время окончания "+ taskManagerBackup.getTaskById(1).getTaskEndTime()); //проверили что время окончания соответствует времени окончания последнего сабтаска
+
+        System.out.println();
+
+
+        //проверяем отработку метода сортировки и метода вывода задач/подзадач  одну за другой без пересечений
+       TimeOptimizer.taskSchedulePrinter((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList());
+       taskManagerBackup.getAllTasksList().get(1).setTaskStartTime(Instant.now().plusSeconds(100000));
+       taskManagerBackup.setSubTaskStartTime(1, 7, Instant.now().plusSeconds(120000));
+       taskManagerBackup.setAllTasksList(TimeOptimizer.allTasksTimeOrganizer((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList()));
+        System.out.println();
+       TimeOptimizer.taskSchedulePrinter((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList());
+        System.out.println();
+        System.out.println(TimeOptimizer.sortedScheduleTasksList((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList()));
+
+        taskManagerBackup.organizeScheduleForAllTasks();
+        System.out.println(taskManagerBackup.getPrioritizedTasks((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList()));
+
     }
+
+
 }

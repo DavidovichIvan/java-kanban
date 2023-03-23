@@ -1,5 +1,6 @@
 package Model;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,12 +8,16 @@ public class Task extends TemplateTask {
 
     private boolean isEpic;
 
-
     private String taskDescription;
 
     private List<SubTask> subTasksList;
 
     public Task() {
+        super.taskCreationTime = Instant.now();
+        super.taskStartTime = super.getTaskCreationTime();
+        super.taskDuration = DEFAULT_DURATION_FOR_TASK_IN_MINUTES;
+        super.taskEndTime = calculateTaskEndTime();
+
         super.taskId = idCounter;
         idCounter++;
 
@@ -24,6 +29,11 @@ public class Task extends TemplateTask {
     }
 
     public Task(String taskName, String taskDescription) {
+        super.taskCreationTime = Instant.now();
+        super.taskStartTime = super.getTaskCreationTime();
+        super.taskDuration = DEFAULT_DURATION_FOR_TASK_IN_MINUTES;
+        super.taskEndTime = calculateTaskEndTime();
+
         super.taskId = idCounter;
         idCounter++;
         this.isEpic = false;
@@ -46,6 +56,10 @@ public class Task extends TemplateTask {
         return subTasksList;
     }
 
+    public void setSubTasksList(List<SubTask> subTasksList) {
+        this.subTasksList = subTasksList;
+    }
+
     public boolean isEpic() {
         return isEpic;
     }
@@ -63,7 +77,6 @@ public class Task extends TemplateTask {
     }
 
 
-
     @Override
     public String toString() {
         return "Задача:{" +
@@ -72,6 +85,8 @@ public class Task extends TemplateTask {
                 ", Имя задачи='" + name + '\'' +
                 ", Описание задачи='" + taskDescription + '\'' +
                 ", Текущий статус=" + taskStatus +
+                ", Время начала=" + taskStartTime +
+                ", Время окончания=" + taskEndTime +
                 ", Подзадачи:=" + subTasksList +
                 '}';
     }
