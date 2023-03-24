@@ -1,21 +1,14 @@
-import Exceptions.ManagerSaveException;
-import Interfaces.TaskManager;
 import Manager.*;
 import Model.SubTask;
 import Model.Task;
 import Model.TemplateTask;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
@@ -174,7 +167,7 @@ public class Main {
         System.out.println("Время начала "+taskManagerBackup.getTaskById(1).getTaskStartTime());
         System.out.println("Время окончания "+ taskManagerBackup.getTaskById(1).getTaskEndTime());
 
-        System.out.println(TimeOptimizer.subTasksTimeOrganizer(taskManagerBackup.getTaskById(1)));
+        System.out.println(TimeOptimizer.organizeSubTasksTime(taskManagerBackup.getTaskById(1)));
 
         System.out.println(taskManagerBackup.getTaskById(1).getTaskStartTime());
         for (SubTask s: taskManagerBackup.getTaskById(1).getSubTasksList()) {
@@ -194,17 +187,26 @@ public class Main {
 
 
         //проверяем отработку метода сортировки и метода вывода задач/подзадач  одну за другой без пересечений
-       TimeOptimizer.taskSchedulePrinter((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList());
+       TimeOptimizer.printTasksSchedule((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList());
        taskManagerBackup.getAllTasksList().get(1).setTaskStartTime(Instant.now().plusSeconds(100000));
        taskManagerBackup.setSubTaskStartTime(1, 7, Instant.now().plusSeconds(120000));
-       taskManagerBackup.setAllTasksList(TimeOptimizer.allTasksTimeOrganizer((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList()));
+       taskManagerBackup.setAllTasksList(TimeOptimizer.organizeAllTasksTime((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList()));
         System.out.println();
-       TimeOptimizer.taskSchedulePrinter((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList());
+        TimeOptimizer.printTasksSchedule((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList());
         System.out.println();
-        System.out.println(TimeOptimizer.sortedScheduleTasksList((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList()));
 
-        taskManagerBackup.organizeScheduleForAllTasks();
-        System.out.println(taskManagerBackup.getPrioritizedTasks((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList()));
+
+        System.out.println(taskManagerBackup.getAllTasksList().get(1).getSubTasksList().get(3).getTaskEndTime());
+        System.out.println(taskManagerBackup.getAllTasksList().get(1).getTaskEndTime());
+
+        taskManagerBackup.getAllTasksList().get(1).setTaskEndTime(taskManagerBackup.getAllTasksList().get(1).getSubTasksList().get(3).getTaskEndTime());
+
+        System.out.println(taskManagerBackup.getAllTasksList().get(1).getTaskEndTime());
+
+     //   System.out.println(TimeOptimizer.sortedScheduleTasksList((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList()));
+
+      //  taskManagerBackup.organizeScheduleForAllTasks();
+     //   System.out.println(taskManagerBackup.getPrioritizedTasks((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList()));
 
     }
 

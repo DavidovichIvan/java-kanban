@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 class EpicStatusTest {
     int id;
     InMemoryTaskManager taskManagerTest = (InMemoryTaskManager) Managers.getDefault();
@@ -41,8 +43,10 @@ class EpicStatusTest {
         t.setSubTasksList(null);
         t1.setSubTasksList(null);
 
-        Assertions.assertEquals(expectedStatus, t.getTaskStatus());
-        Assertions.assertEquals(expectedStatus, t1.getTaskStatus());
+        assertAll(
+                ()-> assertEquals(expectedStatus, t.getTaskStatus()),
+                ()-> assertEquals(expectedStatus, t1.getTaskStatus())
+        );
     }
 
     @Test //Все подзадачи со статусом NEW.
@@ -52,13 +56,15 @@ class EpicStatusTest {
         int subId = taskManagerTest.createSubTask
                 (id, "Уборка в ванной", TemplateTask.TaskStatus.IN_PROGRESS).getSubTaskId();
         expectedStatus = TemplateTask.TaskStatus.IN_PROGRESS;
-        Assertions.assertEquals(expectedStatus, taskManagerTest.getTaskById(id).getTaskStatus());
+        assertEquals
+                (expectedStatus, taskManagerTest.getTaskById(id).getTaskStatus());
 
         taskManagerTest.getSubTaskById(subId).setTaskStatus(TemplateTask.TaskStatus.NEW);
         taskManagerTest.updateTaskStatus(id);
 
         expectedStatus = TemplateTask.TaskStatus.NEW;
-        Assertions.assertEquals(expectedStatus, taskManagerTest.getTaskById(id).getTaskStatus());
+        assertEquals
+                (expectedStatus, taskManagerTest.getTaskById(id).getTaskStatus());
     }
 
     @Test //Все подзадачи со статусом DONE.
@@ -67,7 +73,8 @@ class EpicStatusTest {
         taskManagerTest.createSubTask(id, "Уборка в ванной", TemplateTask.TaskStatus.DONE);
 
         expectedStatus = TemplateTask.TaskStatus.DONE;
-        Assertions.assertEquals(expectedStatus, taskManagerTest.getTaskById(id).getTaskStatus());
+        assertEquals
+                (expectedStatus, taskManagerTest.getTaskById(id).getTaskStatus());
     }
 
     @Test //Подзадачи со статусами NEW и DONE.
@@ -76,18 +83,21 @@ class EpicStatusTest {
         taskManagerTest.createSubTask(id, "Уборка в ванной", TemplateTask.TaskStatus.NEW);
 
         expectedStatus = TemplateTask.TaskStatus.IN_PROGRESS;
-        Assertions.assertEquals(expectedStatus, taskManagerTest.getTaskById(id).getTaskStatus());
+        assertEquals
+                (expectedStatus, taskManagerTest.getTaskById(id).getTaskStatus());
     }
 
    @Test //Подзадачи со статусом IN_PROGRESS.
    public void StatusShouldBeInProgressIfAnyOfSubTaskIsInProgress() {
        taskManagerTest.createSubTask(id, "Уборка в гостинной", TemplateTask.TaskStatus.NEW);
-       Assertions.assertEquals(expectedStatus, taskManagerTest.getTaskById(id).getTaskStatus());
+       assertEquals
+               (expectedStatus, taskManagerTest.getTaskById(id).getTaskStatus());
 
        taskManagerTest.createSubTask(id, "Уборка в ванной", TemplateTask.TaskStatus.IN_PROGRESS);
 
        expectedStatus = TemplateTask.TaskStatus.IN_PROGRESS;
-       Assertions.assertEquals(expectedStatus, taskManagerTest.getTaskById(id).getTaskStatus());
+       assertEquals
+               (expectedStatus, taskManagerTest.getTaskById(id).getTaskStatus());
 
    }
 

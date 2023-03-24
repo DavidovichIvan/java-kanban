@@ -6,7 +6,6 @@ import Model.Task;
 import Model.TemplateTask;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -154,6 +153,6 @@ public interface TaskManager {
      *
      * @return
      */
-    ArrayList<Task> getPrioritizedTasks(HashMap<Integer, Task> allTasksList);
+    List<Task> getPrioritizedTasks(HashMap<Integer, Task> allTasksList);
 
 }

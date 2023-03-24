@@ -3,7 +3,6 @@ package Manager;
 
 import Exceptions.ManagerSaveException;
 import Interfaces.HistoryManager;
-import Interfaces.TaskManager;
 import Model.SubTask;
 import Model.Task;
 import Model.TemplateTask;
@@ -16,7 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -214,7 +212,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     }
 
     @Override
-    public ArrayList<Task> getPrioritizedTasks(HashMap<Integer, Task> allTasksList) {
+    public List<Task> getPrioritizedTasks(HashMap<Integer, Task> allTasksList) {
         return super.getPrioritizedTasks(allTasksList);
     }
 

@@ -1,3 +1,24 @@
+/* Комментарии по доработке:
+По форматированию длинных строк, содержащих несколько действий - прошел по тексту,
+разделил наиболее длинные, запомню, мне тож не нравилось, теперь буду сразу разделять.
+
+По коллекциям прошелся в TimeOptimizer заменил на интерфейсы.
+
+По замене коллекции хранения подзадач со списка на TreeSet чтобы сразу элементы сортировались по времени,
+спасибо за подсказку, механизм понятен. Согласен что лучше сразу сохранять как нужно.
+Как я посмотрел в данном случае такая замена тянет много моментов за собой по всей программе.
+Попробую в дальнейшем переделать аккуратно.
+
+Названия методов в TimeOptimizer заменил на глаголы.
+
+Очень полезная подсказка про assertAll(), по смыслу полезно и визуально тоже более структурированный вид у кода.
+Реализовал в нескольких местах. Взял на вооружение.
+
+Видна польза от уже написанных тестов при их повтороном использованиии после каких-либо изменений в коде.
+
+ */
+
+
 package Manager;
 
 import Interfaces.HistoryManager;
@@ -8,10 +29,7 @@ import Model.TemplateTask;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
 
@@ -21,13 +39,13 @@ public class InMemoryTaskManager implements TaskManager {
 
     protected Map<Integer, Task> allTasksList = new HashMap<>();
 
-    protected InMemoryHistoryManager history;
+    protected HistoryManager history;
 
     public InMemoryTaskManager(HistoryManager history) {
-        this.history = (InMemoryHistoryManager) history;
+        this.history = history;
     }
 
-    public InMemoryHistoryManager getHistory() {
+    public HistoryManager getHistory() {
         return history;
     }
 
@@ -88,7 +106,10 @@ public class InMemoryTaskManager implements TaskManager {
         if (!allTasksList.containsKey(mainTaskId)) {
             return Feedback.NON_EXISTING_TASK_ID;
         } else {
-            getAllTasksList().get(mainTaskId).getSubTasksList().add(subTask);
+            getAllTasksList().
+                    get(mainTaskId).
+                    getSubTasksList().
+                    add(subTask);
             updateTaskStatus(mainTaskId);
             if (!getAllTasksList().get(mainTaskId).getSubTasksList().isEmpty()) {
                 getAllTasksList().get(mainTaskId).setEpic(true);
@@ -254,7 +275,9 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Feedback changeTaskDescriptionById(int taskID, String newTaskDescription) {
         if (allTasksList.containsKey(taskID)) {
-            allTasksList.get(taskID).setTaskDescription(newTaskDescription);
+            allTasksList.
+                    get(taskID).
+                    setTaskDescription(newTaskDescription);
             return Feedback.TASK_SUCCESSFULLY_UPDATED;
         }
         return Feedback.NON_EXISTING_TASK_ID;
@@ -299,8 +322,10 @@ public class InMemoryTaskManager implements TaskManager {
             }
         }
         if (isDone) {
-            getTaskById(taskID).setTaskStatus(TemplateTask.TaskStatus.DONE);
-        } else getTaskById(taskID).setTaskStatus(TemplateTask.TaskStatus.IN_PROGRESS);
+            getTaskById(taskID).
+                    setTaskStatus(TemplateTask.TaskStatus.DONE);
+        } else getTaskById(taskID).
+                setTaskStatus(TemplateTask.TaskStatus.IN_PROGRESS);
     }
 
     @Override
@@ -313,11 +338,15 @@ public class InMemoryTaskManager implements TaskManager {
         if (!getTaskById(taskID).isEpic() || (!getTaskById(taskID).isEpic()
                 && getTaskById(taskID).getSubTasksList().isEmpty())) {
             getTaskById(taskID).setTaskStartTime(startTime);
-            getTaskById(taskID).setTaskEndTime(getTaskById(taskID).calculateTaskEndTime());
-        } else if (getTaskById(taskID).isEpic() && !getTaskById(taskID).getSubTasksList().isEmpty()) {
+            getTaskById(taskID).
+                    setTaskEndTime(getTaskById(taskID).
+                            calculateTaskEndTime());
+        } else if (getTaskById(taskID).isEpic()
+                && !getTaskById(taskID).getSubTasksList().isEmpty()) {
             getTaskById(taskID).setTaskStartTime(startTime);
 
-            getTaskById(taskID).setSubTasksList(TimeOptimizer.subTasksTimeOrganizer(getTaskById(taskID)));
+            getTaskById(taskID).setSubTasksList(TimeOptimizer.
+                    organizeSubTasksTime(getTaskById(taskID)));
             setTaskEndTimeByLastSubtaskTimeAndRecalculateTaskDuration(taskID);
 
         }
@@ -351,8 +380,15 @@ public class InMemoryTaskManager implements TaskManager {
             allTasksList.get(taskID).setTaskStartTime(startTime);
         }
 
-        allTasksList.get(taskID).getSubTasksList().get(subTaskIndexInSubTasksList).setTaskStartTime(startTime);
-        allTasksList.get(taskID).setSubTasksList(TimeOptimizer.subTasksTimeOrganizer(allTasksList.get(taskID)));
+        allTasksList.get(taskID).
+                getSubTasksList().
+                get(subTaskIndexInSubTasksList).
+                setTaskStartTime(startTime);
+
+        allTasksList.get(taskID).
+                setSubTasksList(TimeOptimizer.
+                        organizeSubTasksTime(allTasksList.get(taskID)));
+
         setTaskEndTimeByLastSubtaskTimeAndRecalculateTaskDuration(taskID);
 
         return Feedback.START_TIME_SUCCESSFULLY_UPDATED;
@@ -365,13 +401,21 @@ public class InMemoryTaskManager implements TaskManager {
      */
     public void setTaskEndTimeByLastSubtaskTimeAndRecalculateTaskDuration(int taskID) {
         int lastElement = getTaskById(taskID).getSubTasksList().size() - 1;
-        Instant lastSubEndTime = getTaskById(taskID).getSubTasksList().get(lastElement).getTaskEndTime();
+
+       //temporaryTaskList.sort(Comparator.comparing(Task::getTaskStartTime));
+      //  getTaskById(taskID).setSubTasksList(TimeOptimizer.subTasksTimeOrganizer(allTasksList.get(allTasksList)));
+
+        Instant lastSubEndTime = getTaskById(taskID).
+                getSubTasksList().
+                get(lastElement).
+                getTaskEndTime();
         getTaskById(taskID).setTaskEndTime(lastSubEndTime);
 
         Instant start = getTaskById(taskID).getTaskStartTime();
         Instant finish = getTaskById(taskID).getTaskEndTime();
 
         getTaskById(taskID).setTaskDuration(Duration.between(start, finish));
+
 
     }
 
@@ -385,8 +429,10 @@ public class InMemoryTaskManager implements TaskManager {
             return Feedback.UNABLE_TO_CHANGE_DURATION_FOR_EPIC_TASK;
         }
 
-        allTasksList.get(taskID).setTaskDuration(Duration.ofMinutes(durationInMinutes));
-        allTasksList.get(taskID).setTaskEndTime(allTasksList.get(taskID).calculateTaskEndTime());
+        allTasksList.get(taskID).
+                setTaskDuration(Duration.ofMinutes(durationInMinutes));
+        allTasksList.get(taskID).
+                setTaskEndTime(allTasksList.get(taskID).calculateTaskEndTime());
 
         return Feedback.DURATION_UPDATED;
     }
@@ -414,8 +460,11 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         allTasksList.get(taskID).getSubTasksList()
-                .get(subTaskIndexInSubTasksList).setTaskDuration(Duration.ofMinutes(durationInMinutes));
-        allTasksList.get(taskID).setSubTasksList(TimeOptimizer.subTasksTimeOrganizer(allTasksList.get(taskID)));
+                .get(subTaskIndexInSubTasksList).
+                setTaskDuration(Duration.ofMinutes(durationInMinutes));
+        allTasksList.get(taskID).
+                setSubTasksList(TimeOptimizer.
+                        organizeSubTasksTime(allTasksList.get(taskID)));
         setTaskEndTimeByLastSubtaskTimeAndRecalculateTaskDuration(taskID);
 
         return Feedback.DURATION_UPDATED;
@@ -428,8 +477,10 @@ public class InMemoryTaskManager implements TaskManager {
             return Feedback.NON_EXISTING_TASK_ID;
         }
 
-        if (getTaskById(taskID).isEpic() && !getTaskById(taskID).getSubTasksList().isEmpty()) {
-            getTaskById(taskID).setSubTasksList(TimeOptimizer.subTasksTimeOrganizer(getTaskById(taskID)));
+        if (getTaskById(taskID).isEpic() &&
+                !getTaskById(taskID).getSubTasksList().isEmpty()) {
+            getTaskById(taskID).
+                    setSubTasksList(TimeOptimizer.organizeSubTasksTime(getTaskById(taskID)));
             return Feedback.SUBTASKS_SCHEDULE_UPDATED;
         } else return Feedback.NO_SUBTASKS_TO_BE_RESCHEDULED_FOUND;
     }
@@ -439,14 +490,14 @@ public class InMemoryTaskManager implements TaskManager {
         if (allTasksList.isEmpty()) {
             return Feedback.NO_TASKS_TO_BE_RESCHEDULED_FOUND;
         }
-        setAllTasksList(TimeOptimizer.allTasksTimeOrganizer((HashMap<Integer, Task>) allTasksList));
+        setAllTasksList(TimeOptimizer.organizeAllTasksTime((HashMap<Integer, Task>) allTasksList));
         return Feedback.SUBTASKS_SCHEDULE_UPDATED;
 
     }
 
     @Override
-    public ArrayList<Task> getPrioritizedTasks(HashMap<Integer, Task> allTasksList) {
-        return TimeOptimizer.sortedScheduleTasksList(allTasksList);
+    public List<Task> getPrioritizedTasks(HashMap<Integer, Task> allTasksList) {
+        return TimeOptimizer.sortScheduleTasksList(allTasksList);
 
     }
 

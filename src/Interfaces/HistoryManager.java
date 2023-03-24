@@ -3,6 +3,7 @@ package Interfaces;
 import Model.TemplateTask;
 
 import java.util.List;
+import java.util.Map;
 
 public interface HistoryManager {
 
@@ -14,4 +15,6 @@ public interface HistoryManager {
     void removeFromHistory(int id);
 
     List<TemplateTask> getHistoryList();
+
+    Map<Integer, TemplateTask> getHistoryMap();
 }

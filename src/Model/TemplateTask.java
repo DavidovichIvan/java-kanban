@@ -46,7 +46,7 @@ public abstract class TemplateTask {
 
     public void setTaskDuration(Duration taskDuration) {
         this.taskDuration = taskDuration;
-        this.taskEndTime = calculateTaskEndTime();
+
     }
 
 

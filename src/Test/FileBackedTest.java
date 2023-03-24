@@ -13,6 +13,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 public class FileBackedTest {
 
     FileBackedTasksManager taskManagerBackupTest;
@@ -40,8 +42,8 @@ public class FileBackedTest {
         }
 
         taskManagerBackupTest.setFileForDataStorage(testDataPath);
-        Assertions.assertTrue(Files.isWritable(Path.of(testDataPath)));
-        Assertions.assertTrue((Files.exists(Path.of(testDataPath))));
+        assertTrue(Files.isWritable(Path.of(testDataPath)));
+        assertTrue((Files.exists(Path.of(testDataPath))));
 
     }
 
@@ -50,8 +52,10 @@ public class FileBackedTest {
         SubTask subTest = new SubTask("Тестируем", TemplateTask.TaskStatus.NEW);
         String expectedString = subTest.getTaskId() + ",Тестируем,NEW,";
 
-        Assertions.assertTrue(taskManagerBackupTest.subTaskToString(subTest) instanceof String);
-        Assertions.assertTrue(taskManagerBackupTest.subTaskToString(subTest).contains(expectedString));
+        assertTrue
+                (taskManagerBackupTest.subTaskToString(subTest) instanceof String);
+        assertTrue
+                (taskManagerBackupTest.subTaskToString(subTest).contains(expectedString));
 
     }
 
@@ -70,7 +74,7 @@ public class FileBackedTest {
         fileReader.close();
         reader.close();
 
-        Assertions.assertTrue(actualResult.contains(expected));
+        assertTrue(actualResult.contains(expected));
 
     }
 
@@ -90,26 +94,30 @@ public class FileBackedTest {
         fileReader.close();
         reader.close();
 
-        Assertions.assertTrue(actualResult.contains(expected));
+        assertTrue(actualResult.contains(expected));
 
     }
 
     @Test
     public void loadingTaskManagerFromFile() throws IOException {
 
-        Assertions.assertTrue(taskManagerBackupTest.getAllTasksList().isEmpty());
-        Assertions.assertTrue(taskManagerBackupTest.getHistory().getHistoryList().isEmpty());
+                assertTrue
+                (taskManagerBackupTest.getAllTasksList().isEmpty());
+                 assertTrue
+                (taskManagerBackupTest.getHistory().getHistoryList().isEmpty());
+
+
 
         taskManagerBackupTest = FileBackedTasksManager.loadFromFile(new File(testDirPath));
 
-        Assertions.assertFalse(taskManagerBackupTest.getAllTasksList().isEmpty());
-        Assertions.assertFalse(taskManagerBackupTest.getHistory().getHistoryList().isEmpty());
+        assertFalse(taskManagerBackupTest.getAllTasksList().isEmpty());
+        assertFalse(taskManagerBackupTest.getHistory().getHistoryList().isEmpty());
 
         for (Object t: taskManagerBackupTest.getAllTasksList().values()) {
-            Assertions.assertTrue(t instanceof Task);
+            assertTrue(t instanceof Task);
                }
         for (Object t: taskManagerBackupTest.getHistory().getHistoryList()) {
-            Assertions.assertTrue(t instanceof TemplateTask);
+            assertTrue(t instanceof TemplateTask);
         }
 
     }
@@ -125,9 +133,9 @@ public class FileBackedTest {
         int expectedId = 7;
         String expectedName = "Имя подзадачи";
 
-        Assertions.assertEquals(s.getSubTaskId(), expectedId);
-        Assertions.assertEquals(s.getName(), expectedName);
-        Assertions.assertSame(s.getTaskStatus(), TemplateTask.TaskStatus.NEW);
+        assertEquals(s.getSubTaskId(), expectedId);
+        assertEquals(s.getName(), expectedName);
+        assertSame(s.getTaskStatus(), TemplateTask.TaskStatus.NEW);
     }
 
 
