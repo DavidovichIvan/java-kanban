@@ -1,23 +1,3 @@
-/* Комментарии по доработке:
-По форматированию длинных строк, содержащих несколько действий - прошел по тексту,
-разделил наиболее длинные, запомню, мне тож не нравилось, теперь буду сразу разделять.
-
-По коллекциям прошелся в TimeOptimizer заменил на интерфейсы.
-
-По замене коллекции хранения подзадач со списка на TreeSet чтобы сразу элементы сортировались по времени,
-спасибо за подсказку, механизм понятен. Согласен что лучше сразу сохранять как нужно.
-Как я посмотрел в данном случае такая замена тянет много моментов за собой по всей программе.
-Попробую в дальнейшем переделать аккуратно.
-
-Названия методов в TimeOptimizer заменил на глаголы.
-
-Очень полезная подсказка про assertAll(), по смыслу полезно и визуально тоже более структурированный вид у кода.
-Реализовал в нескольких местах. Взял на вооружение.
-
-Видна польза от уже написанных тестов при их повтороном использованиии после каких-либо изменений в коде.
-
- */
-
 
 package Manager;
 
@@ -27,13 +7,13 @@ import Model.SubTask;
 import Model.Task;
 import Model.TemplateTask;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
-
-    public void setAllTasksList(Map<Integer, Task> allTasksList) {
+    public void setAllTasksList(Map<Integer, Task> allTasksList) throws IOException, InterruptedException {
         this.allTasksList = allTasksList;
     }
 
@@ -45,9 +25,21 @@ public class InMemoryTaskManager implements TaskManager {
         this.history = history;
     }
 
+    @Override
     public HistoryManager getHistory() {
         return history;
     }
+
+    @Override
+    public String getDataFilePath() {
+        return "Current manager does not support file-processing operations";
+    }
+
+    @Override
+    public void saveData() {
+    }
+
+    ;
 
     @Override
     public Task createNewTask() {
@@ -56,7 +48,6 @@ public class InMemoryTaskManager implements TaskManager {
 
         return task;
     }
-
 
     @Override
     public Task createNewTask(String taskName, String taskDescription) {
@@ -402,21 +393,28 @@ public class InMemoryTaskManager implements TaskManager {
     public void setTaskEndTimeByLastSubtaskTimeAndRecalculateTaskDuration(int taskID) {
         int lastElement = getTaskById(taskID).getSubTasksList().size() - 1;
 
-       //temporaryTaskList.sort(Comparator.comparing(Task::getTaskStartTime));
-      //  getTaskById(taskID).setSubTasksList(TimeOptimizer.subTasksTimeOrganizer(allTasksList.get(allTasksList)));
+        ArrayList<SubTask> temp = (ArrayList<SubTask>) getTaskById(taskID).getSubTasksList();
+        temp.sort(Comparator.comparing(TemplateTask::getTaskStartTime));
+        getTaskById(taskID).setSubTasksList(temp);
+
+        Instant firstSubStartTime = getTaskById(taskID).
+                getSubTasksList().
+                get(0).
+                getTaskStartTime();
+
+        getTaskById(taskID).setTaskStartTime(firstSubStartTime);
 
         Instant lastSubEndTime = getTaskById(taskID).
                 getSubTasksList().
                 get(lastElement).
                 getTaskEndTime();
+
         getTaskById(taskID).setTaskEndTime(lastSubEndTime);
 
         Instant start = getTaskById(taskID).getTaskStartTime();
         Instant finish = getTaskById(taskID).getTaskEndTime();
 
         getTaskById(taskID).setTaskDuration(Duration.between(start, finish));
-
-
     }
 
     @Override
@@ -490,7 +488,13 @@ public class InMemoryTaskManager implements TaskManager {
         if (allTasksList.isEmpty()) {
             return Feedback.NO_TASKS_TO_BE_RESCHEDULED_FOUND;
         }
-        setAllTasksList(TimeOptimizer.organizeAllTasksTime((HashMap<Integer, Task>) allTasksList));
+        try {
+            setAllTasksList(TimeOptimizer.organizeAllTasksTime((HashMap<Integer, Task>) allTasksList));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         return Feedback.SUBTASKS_SCHEDULE_UPDATED;
 
     }

@@ -36,13 +36,13 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         this.historyFilePath = dataPath + File.separator + HISTORY_STORAGE_FILE_NAME;
 
     }
-
+@Override
     public String getDataFilePath() {
         return dataFilePath;
     }
 
 
-    public void setAllTasksList(Map<Integer, Task> allTasksList) {
+    public void setAllTasksList(Map<Integer, Task> allTasksList) throws IOException, InterruptedException {
         super.setAllTasksList(allTasksList);
         saveData();
     }
@@ -167,7 +167,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         saveData();
     }
 
-    //------------------------------------------new
     @Override
     public Feedback setTaskStartTime(int taskID, Instant startTime) {
         Feedback f = super.setTaskStartTime(taskID, startTime);
@@ -284,7 +283,8 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     /**
      * Method for auto updating Tasks/SubTasks data in files
      */
-    private void saveData() {
+    @Override
+    public void saveData() {
         setFileForDataStorage(dataFilePath);
         for (Task t : allTasksList.values()) {
             saveTask(t, dataFilePath);
@@ -294,7 +294,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     /**
      * Method for auto updating history of views data in files
      */
-    private void saveHistory() {
+    protected void saveHistory() {
         setFileForDataStorage(historyFilePath);
         for (TemplateTask t : getHistory().getHistoryList()) {
             if (t instanceof Task) {

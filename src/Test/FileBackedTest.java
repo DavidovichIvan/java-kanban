@@ -19,11 +19,10 @@ public class FileBackedTest {
 
     FileBackedTasksManager taskManagerBackupTest;
     final String testDataPath = "C:\\Users\\Вуня\\Desktop\\dev\\6th sprint\\java-kanban\\src\\DataStorage\\testData.csv";
+
     final String testDataPath2 = "C:\\Users\\Вуня\\Desktop\\dev\\6th sprint\\java-kanban\\src\\DataStorage\\testData2.csv";
 
-    final String testDataPath3 = "C:\\Users\\Вуня\\Desktop\\dev\\6th sprint\\java-kanban\\src\\DataStorage\\testData3.csv";
     final String testHistoryPath = "C:\\Users\\Вуня\\Desktop\\dev\\6th sprint\\java-kanban\\src\\DataStorage\\History.csv";
-
     final String testDirPath =  "C:\\Users\\Вуня\\Desktop\\dev\\6th sprint\\java-kanban\\src\\DataStorage";
 
     @BeforeEach
@@ -31,7 +30,6 @@ public class FileBackedTest {
         taskManagerBackupTest =
                 (FileBackedTasksManager) Managers.getManagerWithBackup(
                         testDirPath);
-
     }
 
     @Test
@@ -75,9 +73,7 @@ public class FileBackedTest {
         reader.close();
 
         assertTrue(actualResult.contains(expected));
-
     }
-
 
     @Test
     public void gettingTaskShouldUpdHistoryFile() throws IOException {
@@ -93,9 +89,7 @@ public class FileBackedTest {
         String actualResult = reader.readLine();
         fileReader.close();
         reader.close();
-
         assertTrue(actualResult.contains(expected));
-
     }
 
     @Test
@@ -105,9 +99,6 @@ public class FileBackedTest {
                 (taskManagerBackupTest.getAllTasksList().isEmpty());
                  assertTrue
                 (taskManagerBackupTest.getHistory().getHistoryList().isEmpty());
-
-
-
         taskManagerBackupTest = FileBackedTasksManager.loadFromFile(new File(testDirPath));
 
         assertFalse(taskManagerBackupTest.getAllTasksList().isEmpty());
@@ -129,7 +120,6 @@ public class FileBackedTest {
                 "7,Имя подзадачи,NEW,2023-03-23T11:52:04.254663Z,2023-03-24T16:53:44.375662100Z,PT20M,2023-03-24T17:13:44.375662100Z";
 
         SubTask s = FileBackedTasksManager.loadSubTaskFromFile(str);
-
         int expectedId = 7;
         String expectedName = "Имя подзадачи";
 
@@ -137,8 +127,6 @@ public class FileBackedTest {
         assertEquals(s.getName(), expectedName);
         assertSame(s.getTaskStatus(), TemplateTask.TaskStatus.NEW);
     }
-
-
 
 }
 

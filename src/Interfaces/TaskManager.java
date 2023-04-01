@@ -155,4 +155,8 @@ public interface TaskManager {
      */
     List<Task> getPrioritizedTasks(HashMap<Integer, Task> allTasksList);
 
+    HistoryManager getHistory();
+    String getDataFilePath();
+   void saveData();
+
 }

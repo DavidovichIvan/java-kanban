@@ -9,7 +9,6 @@ public abstract class TemplateTask {
 
     protected int taskId;
 
-
     protected String name;
 
 
@@ -46,7 +45,6 @@ public abstract class TemplateTask {
 
     public void setTaskDuration(Duration taskDuration) {
         this.taskDuration = taskDuration;
-
     }
 
 

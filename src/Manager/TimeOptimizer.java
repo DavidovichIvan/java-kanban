@@ -23,10 +23,11 @@ public class TimeOptimizer {
         List<SubTask> optimizedSubTasksList;
 
         if (!task.getSubTasksList().isEmpty()) {
-            optimizedSubTasksList = task.getSubTasksList();
+       optimizedSubTasksList = task.getSubTasksList();
+
             Instant startTime = task.getTaskStartTime();
 
-            optimizedSubTasksList.sort(Comparator.comparing(TemplateTask::getTaskStartTime));
+         optimizedSubTasksList.sort(Comparator.comparing(TemplateTask::getTaskStartTime));
 
             for (int i = 0; i < optimizedSubTasksList.size(); i++) {
                 optimizedSubTasksList.get(i).
@@ -36,7 +37,6 @@ public class TimeOptimizer {
 
                 startTime = optimizedSubTasksList.get(i).
                         getTaskEndTime().plusSeconds(PERIOD_BETWEEN_SUBTASKS_IN_SECONDS);
-
             }
 
             return optimizedSubTasksList;
@@ -65,6 +65,7 @@ public class TimeOptimizer {
                 int lastSubTasksIndex = t.getSubTasksList().size() - 1;
                 Instant endtime = t.getSubTasksList().get(lastSubTasksIndex).getTaskEndTime();
                 t.setTaskEndTime(endtime);
+
 
                 t.setTaskDuration
                         (Duration.between(t.getTaskEndTime(), t.getTaskStartTime()));
@@ -119,4 +120,3 @@ public class TimeOptimizer {
 
 }
 
-//Спасибо за работу по ревью.

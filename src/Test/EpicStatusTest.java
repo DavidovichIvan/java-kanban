@@ -1,17 +1,3 @@
-/* Комментарии:
-В этом классе реализованы тесты по 1му (из 4) блоку ТЗ.
-
-Во 2ом блоке ТЗ есть такое задание:
-"Для подзадач нужно дополнительно проверить наличие эпика, а для эпика — расчёт статуса."
-
-Расчет статуса для эпика собственно тестируется в этом классе.
-
-Наличие эпика для подзадач проверять в моей реализаци не нужно, так как
-подзадачи сохраняются внутри поля-списка основной задачи,
-то есть в логике программы не существуют сами по себе в отдельном от эпика хранилище.
-*/
-
-
 package Test;
 
 import Manager.InMemoryTaskManager;
@@ -22,11 +8,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class EpicStatusTest {
     int id;
-    InMemoryTaskManager taskManagerTest = (InMemoryTaskManager) Managers.getDefault();
+    InMemoryTaskManager taskManagerTest = (InMemoryTaskManager) Managers.getDefaultOld();
     TemplateTask.TaskStatus expectedStatus;
 
     @BeforeEach

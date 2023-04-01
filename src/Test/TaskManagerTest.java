@@ -6,9 +6,11 @@ import Manager.Managers;
 import Model.SubTask;
 import Model.Task;
 import Model.TemplateTask;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -16,15 +18,14 @@ import java.util.List;
 import static Manager.Feedback.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-
 public class TaskManagerTest {
-
     Task testTask;
     SubTask testSubTask;
-    InMemoryTaskManager taskManagerTest = (InMemoryTaskManager) Managers.getDefault();
-
+    InMemoryTaskManager taskManagerTest = (InMemoryTaskManager) Managers.getDefaultOld();
     final int NON_EXISTING_TEST_ID = -999;
 
+    public TaskManagerTest() throws IOException, InterruptedException {
+    }
 
     @BeforeEach
     public void beforeEach() {
@@ -51,7 +52,6 @@ public class TaskManagerTest {
         taskManagerTest.createNewTask(new Task());
         assertFalse(taskManagerTest.getAllTasksList().isEmpty());
     }
-
 
     @Test
     public void creatingSubtaskForCertainExistingTaskTest() {
@@ -83,7 +83,6 @@ public class TaskManagerTest {
         Task newTestTask = taskManagerTest.getTaskById(id);
         assertEquals(id, newTestTask.getTaskId());
         assertNull(taskManagerTest.getTaskById(NON_EXISTING_TEST_ID));
-
     }
 
     @Test
@@ -95,12 +94,10 @@ public class TaskManagerTest {
         SubTask newTestSubTask = taskManagerTest.getSubTaskById(id);
         assertEquals(id, newTestSubTask.getTaskId());
         assertNull(taskManagerTest.getSubTaskById(NON_EXISTING_TEST_ID));
-
     }
 
     @Test
     public void getAllExistingSubtasksTest() {
-
         taskManagerTest.createNewTask(testTask);
         taskManagerTest.createSubTask(testTask.getTaskId(), testSubTask);
 
@@ -112,7 +109,6 @@ public class TaskManagerTest {
 
     @Test
     public void getSubtasksForCertainTaskByIdTest() {
-
         taskManagerTest.createNewTask(testTask);
         taskManagerTest.createSubTask(testTask.getTaskId(), testSubTask);
 
@@ -126,7 +122,6 @@ public class TaskManagerTest {
 
     @Test
     public void getOnlyEpicTasksTest() {
-
         final int id = testTask.getTaskId();
         taskManagerTest.createNewTask(testTask);
 
@@ -138,12 +133,10 @@ public class TaskManagerTest {
 
         assertTrue(!taskManagerTest.getAllEpicTasksList().isEmpty());
         assertEquals(expectedSubtasksQuantity, taskManagerTest.getAllEpicTasksList().size());
-
     }
 
     @Test
     public void getOnlyNonEpicTasksTest() {
-
         Task t1 = new Task();
         t1.setEpic(true);
         taskManagerTest.createNewTask(t1);
@@ -164,7 +157,6 @@ public class TaskManagerTest {
         assertFalse(taskManagerTest.getAllNonEpicTasksList().containsValue(t2));
         assertTrue(taskManagerTest.getAllNonEpicTasksList().containsValue(t3));
         assertTrue(taskManagerTest.getAllNonEpicTasksList().containsValue(t4));
-
     }
 
     @Test
@@ -179,7 +171,6 @@ public class TaskManagerTest {
 
     @Test
     public void deleteTaskByIdTest() {
-
         Task t1 = new Task();
         taskManagerTest.createNewTask(t1);
         Task t2 = new Task();
@@ -196,7 +187,6 @@ public class TaskManagerTest {
 
     @Test
     public void deleteOneSubTaskByIdTest() {
-
         SubTask s1 = new SubTask();
         SubTask s2 = new SubTask();
 
@@ -205,16 +195,26 @@ public class TaskManagerTest {
         taskManagerTest.createSubTask(testTask.getTaskId(), s1);
         taskManagerTest.createSubTask(testTask.getTaskId(), s2);
         assertTrue
-                (taskManagerTest.getTaskById(testTask.getTaskId()).getSubTasksList().contains(s1));
+                (taskManagerTest
+                        .getTaskById(testTask.getTaskId())
+                        .getSubTasksList()
+                        .contains(s1));
         assertTrue
-                (taskManagerTest.getTaskById(testTask.getTaskId()).getSubTasksList().contains(s2));
+                (taskManagerTest
+                        .getTaskById(testTask.getTaskId())
+                        .getSubTasksList()
+                        .contains(s2));
 
         taskManagerTest.deleteSubTaskByID(s2.getSubTaskId());
 
         assertTrue
-                (taskManagerTest.getTaskById(testTask.getTaskId()).getSubTasksList().contains(s1));
+                (taskManagerTest
+                        .getTaskById(testTask.getTaskId())
+                        .getSubTasksList().contains(s1));
         assertTrue
-                (!taskManagerTest.getTaskById(testTask.getTaskId()).getSubTasksList().contains(s2));
+                (!taskManagerTest
+                        .getTaskById(testTask.getTaskId())
+                        .getSubTasksList().contains(s2));
 
         String expectedFeedback = String.valueOf(FAILED_TO_DELETE_SUBTASK_NON_EXISTING_ID);
         assertEquals(expectedFeedback, String.valueOf
@@ -241,7 +241,6 @@ public class TaskManagerTest {
 
         taskManagerTest.deleteAllSubTasksByTaskId(testTask.getTaskId());
         assertTrue(testTask.getSubTasksList().isEmpty());
-
     }
 
     @Test
@@ -264,7 +263,7 @@ public class TaskManagerTest {
         String expectedFeedback = String.valueOf(FAILED_TO_UPDATE_SUBTASK_NON_EXISTING_ID);
         assertEquals
                 (expectedFeedback, String.valueOf
-                (taskManagerTest.updateSubTask(new SubTask(), NON_EXISTING_TEST_ID)));
+                        (taskManagerTest.updateSubTask(new SubTask(), NON_EXISTING_TEST_ID)));
     }
 
     @Test
@@ -287,13 +286,12 @@ public class TaskManagerTest {
         String expectedResult = String.valueOf(NON_EXISTING_TASK_ID);
         assertEquals
                 (expectedResult, String.valueOf
-                (taskManagerTest.changeTaskNameById(NON_EXISTING_TEST_ID,
-                        "Новое имя")));
+                        (taskManagerTest.changeTaskNameById(NON_EXISTING_TEST_ID,
+                                "Новое имя")));
         assertEquals
                 (expectedResult, String.valueOf
-                (taskManagerTest.changeTaskDescriptionById(NON_EXISTING_TEST_ID,
-                        "Новое имя")));
-
+                        (taskManagerTest.changeTaskDescriptionById(NON_EXISTING_TEST_ID,
+                                "Новое имя")));
     }
 
     @Test
@@ -304,17 +302,16 @@ public class TaskManagerTest {
         String expectedResult = String.valueOf(NON_EXISTING_TASK_ID);
         assertEquals
                 (expectedResult, String.valueOf
-                (taskManagerTest.changeNonEpicTaskStatusById(NON_EXISTING_TEST_ID,
-                        TemplateTask.TaskStatus.DONE)));
+                        (taskManagerTest.changeNonEpicTaskStatusById(NON_EXISTING_TEST_ID,
+                                TemplateTask.TaskStatus.DONE)));
 
         assertSame
                 (testTask.getTaskStatus(), TemplateTask.TaskStatus.NEW);
 
         taskManagerTest.changeNonEpicTaskStatusById(testTask.getTaskId(), TemplateTask.TaskStatus.DONE);
 
-       assertSame
+        assertSame
                 (testTask.getTaskStatus(), TemplateTask.TaskStatus.DONE);
-
 
         String expectedResult1 = String.valueOf(UNABLE_TO_UPDATE_STATUS_FOR_EPIC_TASK);
         Task testTask1 = new Task();
@@ -324,13 +321,11 @@ public class TaskManagerTest {
         assertEquals
                 (expectedResult1, String.valueOf
                         (taskManagerTest.changeNonEpicTaskStatusById(testTask1.getTaskId(),
-                        TemplateTask.TaskStatus.IN_PROGRESS)));
-
+                                TemplateTask.TaskStatus.IN_PROGRESS)));
     }
 
     @Test
     public void shouldChangeTaskStartTime() {
-
         Instant newTime = Instant.now().plusSeconds(5);
         assertFalse
                 (testTask.getTaskStartTime().equals(newTime),
@@ -345,7 +340,6 @@ public class TaskManagerTest {
 
     @Test
     public void setTaskEndTimeByLastSubtaskTimeAndRecalculateTaskDurationTest() {
-
         int taskID = testTask.getTaskId();
         testTask.setTaskStartTime(Instant.now());
 
@@ -363,16 +357,16 @@ public class TaskManagerTest {
         SubTask s3 = new SubTask();
         s3.setTaskDuration(Duration.ofMinutes(15));
         taskManagerTest.createSubTask(taskID, s3);
+        Duration expectedTaskDuration = s3.getTaskDuration();
 
         assertNotEquals
                 (taskManagerTest.getTaskById(taskID).getTaskEndTime(), s3.getTaskEndTime());
 
         taskManagerTest.setTaskEndTimeByLastSubtaskTimeAndRecalculateTaskDuration(taskID);
-        assertTrue
-                (taskManagerTest.getTaskById(taskID).getTaskEndTime().equals(s3.getTaskEndTime()),
-                "Время завершения задачи установлено как время завершения последней подзадачи.");
 
-
+        assertTrue(taskManagerTest.getTaskById(taskID).getTaskEndTime().equals(s3.getTaskEndTime()),
+                "Время завершения задачи установлено как время завершения последней подзадачи." + "  "
+                        + taskManagerTest.getTaskById(taskID).getTaskEndTime() + "  " + s3.getTaskEndTime());
     }
 }
 

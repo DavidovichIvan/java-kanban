@@ -10,7 +10,6 @@ public class Epic extends TemplateTask {
      * getters/setters
      */
     public void setEpicTask(Task epicTask) {
-
         this.epicTask = epicTask;
     }
 
@@ -18,7 +17,6 @@ public class Epic extends TemplateTask {
 
         this.epicSubTasks = epicSubTasks;
     }
-
     @Override
     public String toString() {
         return "Эпик {" +

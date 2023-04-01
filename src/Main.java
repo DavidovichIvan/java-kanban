@@ -1,3 +1,6 @@
+import HTTP.HttpTaskServer;
+import HTTP.KVServer;
+import HTTP.KVTaskClient;
 import Manager.*;
 import Model.SubTask;
 import Model.Task;
@@ -5,21 +8,30 @@ import Model.TemplateTask;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.HashMap;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, InterruptedException {
 
         InMemoryTaskManager taskManager = (InMemoryTaskManager) Managers.getDefault();
 
         //---------------------------------------------------------
         //Проверяем запись задач/подзадач и истории в файлы
         FileBackedTasksManager taskManagerBackup =
-                (FileBackedTasksManager) Managers.getManagerWithBackup(
-                         "C:\\Users\\Вуня\\Desktop\\dev\\6th sprint\\java-kanban\\src\\DataStorage");
+             (FileBackedTasksManager) Managers.getManagerWithBackup("C:\\Users\\Вуня\\Desktop\\dev\\6th sprint\\java-kanban\\src\\DataStorage");
+    //    FileBackedTasksManager taskManagerBackup =
+      //          (FileBackedTasksManager) Managers.getManagerWithBackup(
+        //              "C:\\Users\\User\\Desktop\\учеба\\Дж\\8 sp\\6th sprint\\java-kanban\\src\\DataStorage");
+
 
         taskManagerBackup.createNewTask();
         taskManagerBackup.createNewTask(new Task());
@@ -123,7 +135,8 @@ public class Main {
         //-----------------------------------------------------------------------------------------
 
         //Проверяем создание объекта с восстановлением задач из файла
-        File file = new File("C:\\Users\\Вуня\\Desktop\\dev\\6th sprint\\java-kanban\\src\\DataStorage");
+       File file = new File("C:\\Users\\Вуня\\Desktop\\dev\\6th sprint\\java-kanban\\src\\DataStorage");
+        // File file = new File("C:\\Users\\User\\Desktop\\учеба\\Дж\\8 sp\\6th sprint\\java-kanban\\src\\DataStorage");
         FileBackedTasksManager taskManagerBackup1;
 
         try {
@@ -195,18 +208,33 @@ public class Main {
         TimeOptimizer.printTasksSchedule((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList());
         System.out.println();
 
-
         System.out.println(taskManagerBackup.getAllTasksList().get(1).getSubTasksList().get(3).getTaskEndTime());
-        System.out.println(taskManagerBackup.getAllTasksList().get(1).getTaskEndTime());
+    //server part
+        HttpTaskServer server = new HttpTaskServer(); //создали сервер
+        server.setServerManager(taskManagerBackup); //присвоили менеджеру существующий менеджер чтобы не вводить задачи заново
+        server.startServer(); //запустили сервер, там создался экземпляр файлового менеджера - fbtManager
 
-        taskManagerBackup.getAllTasksList().get(1).setTaskEndTime(taskManagerBackup.getAllTasksList().get(1).getSubTasksList().get(3).getTaskEndTime());
 
-        System.out.println(taskManagerBackup.getAllTasksList().get(1).getTaskEndTime());
+        KVServer kvServer = new KVServer();
+        kvServer.start();
 
-     //   System.out.println(TimeOptimizer.sortedScheduleTasksList((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList()));
+        KVTaskClient client = new KVTaskClient("http://localhost:8078/"); //конструктор для нового пользователя у кторого нет apiToken
 
-      //  taskManagerBackup.organizeScheduleForAllTasks();
-     //   System.out.println(taskManagerBackup.getPrioritizedTasks((HashMap<Integer, Task>) taskManagerBackup.getAllTasksList()));
+        KVTaskClient client1 = new KVTaskClient("API_TOKEN=DEBUG", "http://localhost:8078/"); //конструктор для тех у кого есть apiToken
+        System.out.println(client1.getApiToken());
+
+        String key = String.valueOf(6);
+        String key1 = String.valueOf(7);
+
+        client1.put(key,"{\"user\":\"Вася\",\"text\":\"Ништяк\"}"); //проверили запись
+        client1.put(key1,"{\"user\":\"Петя\",\"text\":\"Супер\"}");
+
+        client1.load(key); //проверили загрузку
+        client1.load(key1);
+
+        client1.put(key1,"{\"user\":\"НеПетя\",\"text\":\"Нормас\"}"); //проверили перезапись
+        client1.load(key1);
+
 
     }
 

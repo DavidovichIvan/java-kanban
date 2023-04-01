@@ -40,12 +40,12 @@ public class SubTask extends TemplateTask {
 
     @Override
     public String toString() {
-        return "Подзадача:{" +
-                "ID подзадачи=" + taskId +
-                ", имя подзадачи='" + name + '\'' +
-                ", статус подзадачи=" + taskStatus +
-                ", Время начала=" + taskStartTime +
-                ", Время окончания=" + taskEndTime +
+        return "SubTask:{" +
+                "taskId=" + taskId +
+                ", name='" + name + '\'' +
+                ", taskStatus=" + taskStatus +
+                ", taskStartTime=" + taskStartTime +
+                ", taskEndTime=" + taskEndTime +
                 '}';
     }
 }

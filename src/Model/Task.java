@@ -1,8 +1,7 @@
 package Model;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Task extends TemplateTask {
 
@@ -10,7 +9,7 @@ public class Task extends TemplateTask {
 
     private String taskDescription;
 
-    private List<SubTask> subTasksList;
+   private List<SubTask> subTasksList;
 
     public Task() {
         super.taskCreationTime = Instant.now();
@@ -58,7 +57,7 @@ public class Task extends TemplateTask {
 
     public void setSubTasksList(List<SubTask> subTasksList) {
         this.subTasksList = subTasksList;
-    }
+      }
 
     public boolean isEpic() {
         return isEpic;
@@ -79,15 +78,15 @@ public class Task extends TemplateTask {
 
     @Override
     public String toString() {
-        return "Задача:{" +
-                "ID задачи=" + taskId +
-                ", Эпик=" + isEpic +
-                ", Имя задачи='" + name + '\'' +
-                ", Описание задачи='" + taskDescription + '\'' +
-                ", Текущий статус=" + taskStatus +
-                ", Время начала=" + taskStartTime +
-                ", Время окончания=" + taskEndTime +
-                ", Подзадачи:=" + subTasksList +
+        return "Task:{" +
+                "taskId=" + taskId +
+                ", isEpic=" + isEpic +
+                ", name=" + name + '\'' +
+                ", taskDescription='" + taskDescription + '\'' +
+                ", taskStatus=" + taskStatus +
+                ", taskStartTime=" + taskStartTime +
+                ", taskEndTime=" + taskEndTime +
+                ", subTasksList=" + subTasksList +
                 '}';
     }
 
