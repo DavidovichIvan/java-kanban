@@ -29,8 +29,6 @@ public class HttpTaskServerTest {
 
     private String testBodytext = "{\"name\":\"testName\",\"taskDescription\":\"testDescription\"}";
 
-    public HttpTaskServerTest() throws IOException {
-    }
 
     @BeforeEach
     public void beforeEach() throws IOException {

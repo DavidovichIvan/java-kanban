@@ -20,15 +20,11 @@ public class HttpTaskManager extends FileBackedTasksManager {
     KVTaskClient kvTaskClient;
 
 
-    public HttpTaskManager(HistoryManager history, String dataPath, String apiToken) {
-        super(history, dataPath);
-        serverURL = dataPath;
-        if (apiToken.isEmpty()) {
-            apiToken = "API_TOKEN=DEBUG";
-        }
-        kvTaskClient = new KVTaskClient(apiToken, serverURL);
+    public HttpTaskManager(HistoryManager history, KVTaskClient  kvTaskClient) {
+        super(history, kvTaskClient.getServerURL());
+        this.serverURL = kvTaskClient.getServerURL();
+             }
 
-    }
 
     /**
      * auxiliary methods for saving data onto KVServer
@@ -49,20 +45,6 @@ public class HttpTaskManager extends FileBackedTasksManager {
             throw new RuntimeException(e);
         }
     }
-
-    /*
-    public void loadFromServer() {
-       // Gson gson = new Gson();
-            try {
-         kvTaskClient.load(SERVER_KEY_FOR_TASKS); //так мы извлекаем строку json которую надо еще десериализовать и перезаписать в alltasksList с у казание в качестве ключа id задачи
-         kvTaskClient.load(SERVER_KEY_FOR_HISTORY);   //так мы извлекаем строку json которую надо еще десериализовать и перезаписать в historylist
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-*/
 
     public void setAllTasksList(Map<Integer, Task> allTasksList) throws IOException, InterruptedException {
         super.setAllTasksList(allTasksList);

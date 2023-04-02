@@ -1,12 +1,9 @@
 /*
-Комментарии к ТЗ.
+Спасибо все поправил, все понятно.
+Пытаюсь делать как можно лучше в меру своего текущего понимания,
+но тут наверное тысячи часов практики нужны)).
 
-Практический весь новый код в пакете HTTP.
-
-Всевозможные варианты отработки запросов (в том числе предусмотренные кодом негативные сценарии) я прогонял через insomnia
-либо через main если это внутрипрограммные клиентские запросы.
-Тесты (позитивные) для основных эндпоинтов также через клиентсике запросы в тестовом блоке прописал.
-
+Спасибо за работу по ревью.
 */
 package HTTP;
 
@@ -49,10 +46,10 @@ public class TaskHandler implements HttpHandler {
         REQUESTED_ENDPOINT_UNKNOWN
     }
 
-    String response = "";
+    //  String response = "";
     Gson gson = new Gson();
 
-    private int rCode = 200;
+    private int rCode;
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
@@ -133,6 +130,7 @@ public class TaskHandler implements HttpHandler {
         }
         int requestedId = postIdOpt.get();
         int mainTaskId = 0;
+        String response = "";
 
         for (Task t : serverManager.getAllTasksList().values()) {
             for (SubTask s : t.getSubTasksList()) {
@@ -144,6 +142,7 @@ public class TaskHandler implements HttpHandler {
         }
 
         if (serverManager.getTaskById(mainTaskId) != null) {
+
             if (body.isEmpty()) {
                 response = String.valueOf(HttpFeedback.REQUEST_DOES_NOT_CONTAIN_REQUIRED_DATA);
                 rCode = 400;
@@ -182,6 +181,7 @@ public class TaskHandler implements HttpHandler {
             return;
         }
         int requestedId = postIdOpt.get();
+        String response = "";
 
         if (serverManager.getTaskById(requestedId) != null) {
             if (body.isEmpty()) {
@@ -208,6 +208,7 @@ public class TaskHandler implements HttpHandler {
     }
 
     private void handleGetAllTasks(HttpExchange httpExchange, int rCode) throws IOException {
+        String response;
         response = serverManager.getAllTasksList().toString();
         writeResponse(httpExchange, gson.toJson(response), rCode);
     }
@@ -250,6 +251,7 @@ public class TaskHandler implements HttpHandler {
         }
 
         int requestedId = postIdOpt.get();
+        String response;
 
         if (serverManager.getTaskById(requestedId) != null) {
             response = serverManager.getTaskById(requestedId).toString();
@@ -274,7 +276,7 @@ public class TaskHandler implements HttpHandler {
     }
 
     private void handleGetHistory(HttpExchange httpExchange, int rCode) throws IOException {
-        response = serverManager.getHistory().getHistoryList().toString();
+        String response = serverManager.getHistory().getHistoryList().toString();
         writeResponse(httpExchange, gson.toJson(response), rCode);
     }
 
@@ -323,6 +325,7 @@ public class TaskHandler implements HttpHandler {
             return;
         }
         int requestedId = postIdOpt.get();
+        String response;
 
         if (serverManager.getSubTaskById(requestedId) != null) {
             response = serverManager.getSubTaskById(requestedId).toString();
@@ -410,17 +413,16 @@ public class TaskHandler implements HttpHandler {
      */
     private Optional<Integer> getIdFromRequestParameter(HttpExchange httpExchange) {
         String query = String.valueOf(httpExchange.getRequestURI().getQuery());
-        String expectdAsId = "";
+        String expectedAsId = "";
 
-        try {
+        if (!query.isEmpty()) {
             String[] params = query.split("&");
             String[] split = params[0].split("=");
-            expectdAsId = split[1];
-        } catch (NullPointerException ex) {
+            expectedAsId = split[1];
         }
 
         try {
-            return Optional.of(Integer.parseInt(expectdAsId));
+            return Optional.of(Integer.parseInt(expectedAsId));
         } catch (NumberFormatException exception) {
             return Optional.empty();
         }
@@ -527,4 +529,3 @@ public class TaskHandler implements HttpHandler {
 
 }
 
-//Спасибо за работу по ревью.

@@ -7,13 +7,20 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 public class KVTaskClient {
+
+
     private final String serverURL;
 
     private final String apiToken;
 
+    public String getServerURL() {
+        return serverURL;
+    }
+
     public String getApiToken() {
         return apiToken;
     }
+
 
     /**
      * constructor for already registered users who already have an apiToken
